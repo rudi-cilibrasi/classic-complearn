@@ -1,0 +1,101 @@
+#include <stdio.h>
+#include <string.h>
+#include <assert.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <stdlib.h>
+#include <getopt.h>
+#include <glib.h>
+#include <gmodule.h>
+#include <libintl.h>
+#include "complearn.h"
+
+#define _(O) gettext(O)
+
+static void print_help_and_exit(void)
+{
+  printf(_("Usage: complearn-config [options]\n"));
+  printf("  -p --prefix\n");
+  printf("  -e --exec-prefix\n");
+  printf("  -l --libs\n");
+  printf("  -s --static-libs\n");
+  printf("  -c --cflags\n");
+  printf("  -m --module-path\n");
+  printf("  -a --api-version\n");
+  printf("  -v --version\n");
+  printf("  -h --help\n");
+  exit(0);
+}
+
+static char *fixup(const char *inp)
+{
+  char *str = strdup(inp);
+  if (strncmp(inp, "${prefix}", 9) == 0) {
+    str = calloc(strlen(inp) + 100, 1);
+    sprintf(str, "%s%s", "@prefix@", inp + 9);
+  }
+  return str;
+}
+
+
+int main(int argc, char **argv)
+{
+  static struct option long_options[] = {
+    {"prefix", 0, 0, 'p'},
+    {"exec-prefix", 0, 0, 'e'},
+    {"api-version", 0, 0, 'a'},
+    {"libs", 0, 0, 'l'},
+    {"module-path", 0, 0, 'm'},
+    {"static-libs", 0, 0, 's'},
+    {"cflags", 0, 0, 'c'},
+    {"version", 0, 0, 'v'},
+    {"help", 0, 0, 'h'},
+    {NULL, 0, 0, 0 }
+  };
+  int c;
+  g_type_init();
+  if (argc <= 1)
+    print_help_and_exit();
+  while (1) {
+    const char *answer;
+    int option_index = 0;
+    c = getopt_long(argc, argv, "pavhmlces", long_options, &option_index);
+    if (c == -1)
+      break;
+    switch (c) {
+      default:
+        print_help_and_exit();
+        break;
+      case 'm':
+        answer = complearn_environment_get_module_path(complearn_environment_top());
+        printf("%s\n", answer);
+        exit(0);
+        break;
+      case 'h':
+        print_help_and_exit();
+        break;
+      case 's':
+        printf("%s -L%s/lib -lcomplearn\n", "@PRIVATELIBS@", fixup("@exec_prefix@"));
+        break;
+      case 'l':
+        printf("-L%s/lib -lcomplearn\n", fixup("@exec_prefix@"));
+        break;
+      case 'c':
+        printf("-I%s/include/complearn-1.0 %s\n", "@prefix@", "@PRIVATECFLAGS@");
+        break;
+      case 'e':
+        printf("%s\n", fixup("@exec_prefix@"));
+        break;
+      case 'p':
+        printf("%s\n", "@prefix@");
+        break;
+      case 'a':
+        printf("1\n");
+        break;
+      case 'v':
+        printf("%s\n", complearn_package_version);
+        break;
+    }
+  }
+  exit(0);
+}

@@ -1,0 +1,564 @@
+# translation of libcomplearn_0.9.9-1_libcomplearn_ru.po to Russian
+# Copyright (C) YEAR Rudi Cilibrasi
+# This file is distributed under the same license as the PACKAGE package.
+#
+# Yuri Kozlov <kozlov.y@gmail.com>, 2007.
+msgid ""
+msgstr ""
+"Project-Id-Version: 0.9.9-1\n"
+"Report-Msgid-Bugs-To: cilibrar@cilibrar.com\n"
+"POT-Creation-Date: 2010-11-24 22:30+0100\n"
+"PO-Revision-Date: 2007-06-24 12:03+0400\n"
+"Last-Translator: Yuri Kozlov <kozlov.y@gmail.com>\n"
+"Language-Team: Russian <debian-l10n-russian@lists.debian.org>\n"
+"Language: ru\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: KBabel 1.11.4\n"
+"Plural-Forms:  nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n"
+"%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
+
+#: src/anycompress.c:43
+msgid ""
+"Usage: anycompress [options] <infile> [<outfile>]\n"
+"\n"
+"OPTIONS:                                                              \n"
+"  -c, --compressor=COMPNAME   set compressor to use                   \n"
+"  -h, --help                  print this help message                 \n"
+"  -L, --list                  list compressors                        \n"
+"  -v, --verbose               print extra detailed information        \n"
+"\n"
+msgstr ""
+"Использование: anycompress [параметры] <входной файл> [<выходной файл>]\n"
+"\n"
+"ПАРАМЕТРЫ:\n"
+"  -c, --compressor=COMPNAME   указать компрессор\n"
+"  -h, --help                  показать это сообщение\n"
+"  -L, --list                  показать список компрессоров\n"
+"  -v, --verbose               показывать дополнительно подробную информацию\n"
+"\n"
+
+#: src/anycompress.c:83
+msgid "Unrecognized option: "
+msgstr "Неизвестный параметр: "
+
+#: src/anycompress.c:89
+#, c-format
+msgid "Compressor %s is a non-coding compressor."
+msgstr "Компрессор %s не является кодирующим."
+
+#: src/anycompress.c:106 src/anydecompress.c:103
+msgid "Don't know what to do with extra arguments."
+msgstr "Непонятно, что делать с лишними параметрами."
+
+#: src/anycompress.c:108 src/anydecompress.c:105
+#, c-format
+msgid "Opening output file %s"
+msgstr "Открывается выходной файл %s"
+
+#: src/anydecompress.c:42
+msgid ""
+"Usage: anydecompress [options] <infile> [<outfile>]\n"
+"\n"
+"OPTIONS:                                                              \n"
+"  -h, --help                  print this help message                 \n"
+"  -L, --list                  list compressors                        \n"
+"  -v, --verbose               print extra detailed information        \n"
+"\n"
+msgstr ""
+"Использование: anydecompress [параметры] <входной файл> [<выходной файл>]\n"
+"\n"
+"ПАРАМЕТРЫ:\n"
+"  -h, --help                  показать это сообщение\n"
+"  -L, --list                  показать список компрессоров\n"
+"  -v, --verbose               показывать дополнительно подробную информацию\n"
+"\n"
+
+#: src/anydecompress.c:80 complearn-ncd.gob:234 src/complearn-ncd.gob:266
+#, c-format
+msgid "Unrecognized option '%c'"
+msgstr "Неизвестный параметр '%c'"
+
+#: src/anydecompress.c:115
+#, c-format
+msgid "Found matching compressor %s"
+msgstr "Найден подходящий компрессор %s"
+
+#: src/anydecompress.c:121
+msgid "Cannot find matching decompressor."
+msgstr "Не найден подходящий компрессор."
+
+#: src/cloutput.c:170 src/cloutput.c:196
+msgid "Cannot write NULL gsl_matrix, exitting."
+msgstr "Не удалось записать NULL gsl_matrix, завершение работы."
+
+#: src/cloutput.c:173
+msgid "Invalid gsl_matrix size, cannot write.  Exitting."
+msgstr "Неправильный размер gsl_matrix, запись невозможна. Завершение работы."
+
+#: src/cloutput.c:184
+msgid "untitled"
+msgstr "неозаглавленный"
+
+#: src/cloutput.c:186
+msgid "unknown"
+msgstr "неизвестный"
+
+#: src/cloutput.c:328
+msgid "Cannot load bzlib"
+msgstr "Не удалось загрузить bzlib"
+
+#: src/cloutput.c:349
+msgid "Cannot load bzlib compressor."
+msgstr "Не удалось загрузить компрессор bzlib."
+
+#: src/cloutput.c:371
+msgid "Failed to parse document."
+msgstr "Не удалось разобрать документ."
+
+#: src/cloutput.c:422
+msgid "Error, no labels for dimension 1."
+msgstr "Ошибка, нет меток для массива 1."
+
+#: src/cloutput.c:427
+msgid "Error, no labels for dimension 2."
+msgstr "Ошибка, нет меток для массива 2."
+
+#: complearn-compressor-driver.gob:110 src/complearn-compressor-driver.gob:110
+msgid "Must set_compressor before trying to compress."
+msgstr "Нужно задать set_compressor перед тем как выполнять сжатие."
+
+#: complearn-compressor-driver.gob:112 src/complearn-compressor-driver.gob:112
+#, c-format
+msgid "Compressor index %d out of bounds."
+msgstr "Индекс компрессора %d вне границ диапазона."
+
+#: src/complearn-config.c:17
+#, c-format
+msgid "Usage: complearn-config [options]\n"
+msgstr "Использование: complearn-config [параметры]\n"
+
+#: complearn-environment.c:272 src/complearn-environment.gob:146
+msgid "module_path"
+msgstr "module_path"
+
+#: complearn-environment.c:273 src/complearn-environment.gob:147
+msgid "directory where modules can be found"
+msgstr "каталог с модулями"
+
+#: complearn-environment.c:281 src/complearn-environment.gob:154
+msgid "verbose"
+msgstr "verbose"
+
+#: complearn-environment.c:282 src/complearn-environment.gob:155
+msgid "print extra detailed information"
+msgstr "показывать дополнительно подробную информацию"
+
+#: complearn-environment.c:290 src/complearn-environment.gob:162
+msgid "nice_level"
+msgstr "nice_level"
+
+#: complearn-environment.c:291 src/complearn-environment.gob:163
+msgid "scheduling priority, higher is less CPU"
+msgstr "приоритет процесса, чем больше значение, тем меньше используется ЦП"
+
+#: complearn-environment.gob:118 src/complearn-environment.gob:120
+msgid "Cannot make more than one environment, use complearn_init() to begin."
+msgstr ""
+"Невозможно сделать более одного окружения, сначала используйте complearn_init"
+"()."
+
+#: complearn-environment.gob:195 src/complearn-environment.gob:209
+#, c-format
+msgid "Trying to read modules directory %s"
+msgstr "Попытка прочитать модули в каталоге %s"
+
+#: complearn-environment.gob:202 src/complearn-environment.gob:216
+#, c-format
+msgid "Trying to load module %s"
+msgstr "Попытка загрузить модуль %s"
+
+#: complearn-environment.gob:206 src/complearn-environment.gob:220
+#, c-format
+msgid "Error loading module %s"
+msgstr "Ошибка загрузки модуля %s"
+
+#: complearn-environment.gob:207 src/complearn-environment.gob:221
+#, c-format
+msgid "Loaded module %s successfully"
+msgstr "Модуль %s загружен успешно"
+
+#: complearn-environment.gob:229 src/complearn-environment.gob:243
+#, c-format
+msgid "Compressor %s is not operational."
+msgstr "Компрессор %s не работает."
+
+#: complearn-environment.gob:271 src/complearn-environment.gob:285
+#, c-format
+msgid "Reading config file %s."
+msgstr "Чтение конфигурационного файла %s."
+
+#: complearn-environment.gob:279 src/complearn-environment.gob:293
+#, c-format
+msgid "Cannot find group %s"
+msgstr "Не удалось найти группу %s"
+
+#: complearn-environment.gob:297 src/complearn-environment.gob:311
+#, c-format
+msgid "Cannot open file %s for writing"
+msgstr "Не удалось открыть файл %s на запись"
+
+#: complearn-environment.gob:392 complearn-environment.gob:482
+#: src/complearn-environment.gob:406 src/complearn-environment.gob:496
+#, c-format
+msgid "Type %s unknown"
+msgstr "Неизвестный тип %s"
+
+#: complearn-environment.gob:450 src/complearn-environment.gob:464
+#, c-format
+msgid "Warning: cannot set nice priority to level %d"
+msgstr "Предупреждение: не удалось установить приоритет процесса равным %d"
+
+#: complearn-environment.gob:451 src/complearn-environment.gob:465
+#, c-format
+msgid "Set nice priority level to %d"
+msgstr "Установить приоритет процесса равным %d"
+
+#: complearn-environment.gob:486 src/complearn-environment.gob:500
+#, c-format
+msgid "No property named %s in object."
+msgstr "В объекте нет свойства с именем %s."
+
+#: complearn-environment.gob:493 src/complearn-environment.gob:507
+#, c-format
+msgid "No name for object at %p"
+msgstr "Нет имени объекта в %p"
+
+#: complearn-environment.gob:495 src/complearn-environment.gob:509
+#, c-format
+msgid "NULL keyfile for %s."
+msgstr "keyfile равен NULL для %s."
+
+#: complearn-environment.gob:497 src/complearn-environment.gob:511
+#, c-format
+msgid "No object at %s."
+msgstr "Нет объекта в %s."
+
+#: complearn-external-compressor.c:220
+#: src/complearn-external-compressor.gob:52
+msgid "Decompression Command"
+msgstr "Команда декомпрессии"
+
+#: complearn-external-compressor.c:221
+#: src/complearn-external-compressor.gob:53
+msgid "Command to decompress from stdin to stdout"
+msgstr "Команда декомпрессии из stdin в stdout"
+
+#: complearn-external-compressor.c:222 complearn-external-compressor.c:231
+#: src/complearn-external-compressor.gob:54
+#: src/complearn-external-compressor.gob:61
+msgid "cat"
+msgstr "cat"
+
+#: complearn-external-compressor.c:229
+#: src/complearn-external-compressor.gob:59
+msgid "Compression Command"
+msgstr "Команда компрессии"
+
+#: complearn-external-compressor.c:230
+#: src/complearn-external-compressor.gob:60
+msgid "Command to compress from stdin to stdout"
+msgstr "Команда компрессии из stdin в stdout"
+
+#: complearn-external-compressor.gob:89
+#: src/complearn-external-compressor.gob:89
+msgid " and "
+msgstr " и "
+
+#: complearn-external-compressor.gob:89
+#: src/complearn-external-compressor.gob:89
+msgid " external commands."
+msgstr " внешние команды."
+
+#: complearn-ncd.c:255 src/complearn-ncd.gob:110
+msgid "output_filestem"
+msgstr "output_filestem"
+
+#: complearn-ncd.c:256 src/complearn-ncd.gob:111
+msgid "prefix of output filename for matrix"
+msgstr "префикс имени выходного файла для матрицы"
+
+#: complearn-ncd.c:257 src/complearn-ncd.gob:112
+msgid "distmatrix"
+msgstr "distmatrix"
+
+#: complearn-ncd.c:264 src/complearn-ncd.gob:118
+msgid "compressor"
+msgstr "compressor"
+
+#: complearn-ncd.c:265 src/complearn-ncd.gob:119
+msgid "default compressor to use"
+msgstr "используемый компрессор по умолчанию"
+
+#: complearn-ncd.c:266 src/complearn-ncd.gob:120
+msgid "zlib"
+msgstr "zlib"
+
+#: complearn-ncd.c:273 src/complearn-ncd.gob:126
+msgid "chop_names"
+msgstr "chop_names"
+
+#: complearn-ncd.c:274 src/complearn-ncd.gob:127
+msgid "remove common prefixes/suffixes from names"
+msgstr "удалить общие префиксы/суффиксы из имён"
+
+#: complearn-ncd.c:282 src/complearn-ncd.gob:134
+msgid "write_txt"
+msgstr "write_txt"
+
+#: complearn-ncd.c:283 src/complearn-ncd.gob:135
+msgid "write text format matrix to file"
+msgstr "записать матрицу в текстовом формате в файл"
+
+#: complearn-ncd.c:291 src/complearn-ncd.gob:142
+msgid "clb_output"
+msgstr "clb_output"
+
+#: complearn-ncd.c:292 src/complearn-ncd.gob:143
+msgid "print a clb-format output distance matrix"
+msgstr "показать выходную матрицу расстояний в формате clb-format"
+
+#: complearn-ncd.c:300 src/complearn-ncd.gob:150
+msgid "plain_output"
+msgstr "plain_output"
+
+#: complearn-ncd.c:301 src/complearn-ncd.gob:151
+msgid "print a plain format output distance matrix"
+msgstr "показать выходную матрицу расстояний в простом формате"
+
+#: complearn-ncd.c:309 src/complearn-ncd.gob:158
+msgid "nexus_output"
+msgstr "nexus_output"
+
+#: complearn-ncd.c:310 src/complearn-ncd.gob:159
+msgid "print a NEXUS format output distance matrix"
+msgstr "показать выходную матрицу расстояний в формате NEXUS"
+
+#: complearn-ncd.c:318 src/complearn-ncd.gob:166
+msgid "zero_diagonal"
+msgstr "zero_diagonal"
+
+#: complearn-ncd.c:319 src/complearn-ncd.gob:167
+msgid "zero diagonal when arguments are the same"
+msgstr "обнулять диагональ, если аргументы одинаковы"
+
+#: complearn-ncd.c:327 src/complearn-ncd.gob:174
+msgid "svd_project"
+msgstr "svd_project"
+
+#: complearn-ncd.c:328 src/complearn-ncd.gob:175
+msgid "perform SVD projection on the matrix"
+msgstr "выполнить проекцию SVD на матрицу"
+
+#: complearn-ncd.c:336 src/complearn-ncd.gob:182
+msgid "html_output"
+msgstr "html_output"
+
+#: complearn-ncd.c:337 src/complearn-ncd.gob:183
+msgid "print HTML table in text output mode"
+msgstr "показывать таблицу HTML при текстовом режиме вывода"
+
+#: complearn-ncd.c:345 src/complearn-ncd.gob:190
+msgid "show_labels"
+msgstr "show_labels"
+
+#: complearn-ncd.c:346 src/complearn-ncd.gob:191
+msgid "print labels in default text output mode"
+msgstr "показывать метки в текстовом режиме вывода по умолчанию"
+
+#: complearn-ncd.c:354 src/complearn-ncd.gob:198
+msgid "just_size"
+msgstr "just_size"
+
+#: complearn-ncd.c:355 src/complearn-ncd.gob:199
+msgid "only calculate compressed size, not NCD"
+msgstr "вычислять только размер сжатия, а не NCD"
+
+#: complearn-ncd.c:363 src/complearn-ncd.gob:206
+msgid "average_matrix"
+msgstr "average_matrix"
+
+#: complearn-ncd.c:364 src/complearn-ncd.gob:207
+msgid "average matrix before outputting result"
+msgstr "усреднить матрицу перед выводом результата"
+
+#: complearn-ncd.gob:71 src/complearn-ncd.gob:71
+msgid "Only one ncd object may be created."
+msgstr "Может быть создан только один объект ncd."
+
+#: complearn-ncd.gob:265 src/complearn-ncd.gob:297
+#, fuzzy
+msgid ""
+"Usage: ncd [options] ...  <arg>\n"
+"\n"
+"Use one argument form to do simple single-object or object-vector     \n"
+"compression or\n"
+"       ncd [options] ...  <arg1> <arg2>\n"
+"  for compression-matrix or NCD matrix calculation\n"
+"OPTIONS:                                                              \n"
+"  -b, --binary-output         enable binary output mode for matrix    \n"
+"  -c, --compressor=COMPNAME   set compressor to use                   \n"
+"  -d, --directory-mode        directory of files                      \n"
+"  -f, --file-mode             a single file                           \n"
+"  -h, --help                  print this help message                 \n"
+"  -l, --literal-mode          a single string literal      (default)  \n"
+"  -L, --list                  list compressors                        \n"
+"  -n, --nexus-output          output NEXUS format distance matrix     \n"
+"  -o, --output=FILESTEM       use FILESTEM instead of distmatrix      \n"
+"  -p, --plainlist-mode        lines with each line a file             \n"
+"  -q, --quiet                 do not print plain text distance matrix \n"
+"  -t, --termlist-mode         lines with each line a literal          \n"
+"  -s, --size                  just compressed sizes in bits no NCD    \n"
+"  -S, --server                stdio server for easy language bindings \n"
+"  -v, --verbose               print extra detailed information        \n"
+"  -V, --version               print complearn library version         \n"
+"\n"
+msgstr ""
+"Использование: ncd [параметры] ...  <аргумент>\n"
+"\n"
+"Использование одиночного аргумента создаёт простой одиночный объект или\n"
+"объект-вектор компрессии или можно использовать\n"
+"               ncd [параметры] ...  <аргумент1> <аргумент2>\n"
+"для матрицы компрессии или вычислительной матрицы NCD\n"
+"ПАРАМЕТРЫ:\n"
+"  -b, --binary-output         включить двоичный режим вывода для матрицы\n"
+"  -c, --compressor=COMPNAME   указать компрессор\n"
+"  -d, --directory-mode        каталог с файлами\n"
+"  -f, --file-mode             одиночный файл\n"
+"  -h, --help                  показать это сообщение\n"
+"  -l, --literal-mode          режим одиночного строкового\n"
+"                              литерала (по умолчанию)\n"
+"  -L, --list                  показать список компрессоров\n"
+"  -n, --nexus-output          выходная матрица расстояний в формате NEXUS\n"
+"  -o, --output=FILESTEM       использовать FILESTEM вместо distmatrix\n"
+"  -p, --plainlist-mode        строки с каждой строкой файла\n"
+"  -q, --quiet                 не показывать матрицу расстояний в виде\n"
+"                               обычного текста\n"
+"  -t, --termlist-mode         строки с каждой строкой литерала\n"
+"  -s, --size                  только размеры компрессии в битах, без NCD\n"
+"  -v, --verbose               показывать дополнительно подробную информацию\n"
+"\n"
+
+#: complearn-ncd.gob:375 src/complearn-ncd.gob:407
+#, c-format
+msgid "Available compressors:\n"
+msgstr "Доступные компрессоры:\n"
+
+#: complearn-ncd.gob:415 src/complearn-ncd.gob:447
+msgid "Unhandled interpretation\n"
+msgstr "Параметр не обработан\n"
+
+#: complearn-ncd.gob:525 src/complearn-ncd.gob:557
+#, c-format
+msgid "Cannot load compressor %s"
+msgstr "Не удалось загрузить компрессор %s"
+
+#: complearn-rcbzlib.c:304 src/complearn-rcbzlib.gob:129
+msgid "small"
+msgstr "small"
+
+#: complearn-rcbzlib.c:305 src/complearn-rcbzlib.gob:130
+msgid "Small memory footprint"
+msgstr "Маленькое потребление памяти"
+
+#: complearn-rcbzlib.c:313 src/complearn-rcbzlib.gob:137
+msgid "verbosity"
+msgstr "verbosity"
+
+#: complearn-rcbzlib.c:314 src/complearn-rcbzlib.gob:138
+msgid "BZip2 Verbosity Level"
+msgstr "Уровень детализации BZip2"
+
+#: complearn-rcbzlib.c:324 src/complearn-rcbzlib.gob:147
+msgid "window-block-size"
+msgstr "window-block-size"
+
+#: complearn-rcbzlib.c:325 src/complearn-rcbzlib.gob:148
+msgid "Window size in 100000-byte chunks"
+msgstr "Размер окна в 100000-байтных блоках"
+
+#: complearn-rcbzlib.c:335 src/complearn-rcbzlib.gob:157
+msgid "work-factor"
+msgstr "work-factor"
+
+#: complearn-rcbzlib.c:336 src/complearn-rcbzlib.gob:158
+msgid "Work factor for bzlib"
+msgstr "Показатель трудозатрат для bzlib"
+
+#: complearn-rcbzlib.gob:201 src/complearn-rcbzlib.gob:201
+msgid "libbz2 (a.k.a. bzlib) blocksort style"
+msgstr "libbz2 (т.н. bzlib) blocksort-стиль"
+
+#: complearn-rczlib.c:280 src/complearn-rczlib.gob:119
+#, fuzzy
+msgid "compression_level"
+msgstr "Уровень компрессии"
+
+#: complearn-rczlib.c:281 src/complearn-rczlib.gob:120
+msgid "Compression level for ZLib, 1-9"
+msgstr "Уровень компрессии для ZLib, 1-9"
+
+#: complearn-rczlib.gob:149 src/complearn-rczlib.gob:149
+#, c-format
+msgid "Unknown error: zlibBuff returned %d"
+msgstr "Неизвестная ошибка: zlibBuff вернула %d"
+
+#: complearn-real-compressor-adaptor.gob:86
+#: src/complearn-real-compressor-adaptor.gob:86
+#, c-format
+msgid "Compressor %s returned NULL block for compression"
+msgstr "Компрессор %s вернул NULL блок для сжатия"
+
+#: complearn-vcblocksort.gob:277 src/complearn-vcblocksort.gob:277
+msgid "non-coding blocksort with fractional bit return"
+msgstr "некодирующая сортировка блоков с дробным результатом"
+
+#: src/util.c:87
+#, c-format
+msgid "Cannot open directory %s"
+msgstr "Не удалось открыть каталог %s"
+
+#: src/util.c:107
+#, c-format
+msgid "Cannot open file %s"
+msgstr "Не удалось открыть файл %s"
+
+#: src/util.c:117
+#, c-format
+msgid "Cannot read line from file %s: %s"
+msgstr "Не удалось прочитать строку из файла %s: %s"
+
+#: src/util.c:155
+#, c-format
+msgid "Cannot change directory to %s"
+msgstr "Не удалось сменить каталог на %s"
+
+#: src/util.c:167
+#, c-format
+msgid "Cannot open directory %s. Error: %s"
+msgstr "Не удалось открыть каталог %s. Ошибка: %s"
+
+#: src/util.c:188
+#, c-format
+msgid "Cannot open file %s for writing."
+msgstr "Не удалось открыть файл %s на запись."
+
+#: src/util.c:199
+#, c-format
+msgid "Cannot open file %s for reading"
+msgstr "Не удалось открыть файл %s на чтение"
+
+#, fuzzy
+#~ msgid "Cannot register_nameable more than one object under name %s"
+#~ msgstr "Невозможно зарегистрировать более одного объекта с именем %s"

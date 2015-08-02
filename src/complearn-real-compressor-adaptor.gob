@@ -1,0 +1,125 @@
+requires 2.0.0
+%headertop{
+#include <glib/garray.h>
+#include "real-compressor.h"
+%}
+
+%{
+/*
+Copyright (c) 2003-2008 Rudi Cilibrasi, Rulers of the RHouse
+All rights reserved.
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions
+are met:
+1. Redistributions of source code must retain the above copyright
+   notice, this list of conditions and the following disclaimer.
+2. Redistributions in binary form must reproduce the above copyright
+   notice, this list of conditions and the following disclaimer in the
+   documentation and/or other materials provided with the distribution.
+3. Neither the name of the University nor the names of its contributors
+   may be used to endorse or promote products derived from this software
+   without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE RULERS AND CONTRIBUTORS ``AS IS'' AND
+ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ARE DISCLAIMED.  IN NO EVENT SHALL THE RULERS OR CONTRIBUTORS BE LIABLE
+FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+SUCH DAMAGE.
+*/
+#include <libintl.h>
+#define _(O) gettext(O)
+
+%}
+
+class CompLearn:Real:Compressor:Adaptor from G:Object
+ (interface CompLearn:Real:Compressor)
+{
+  public G:Object *
+  new(void) {
+    GObject *ret = (GObject *) GET_NEW;
+    return G_OBJECT (ret);
+  }
+  interface CompLearn:Real:Compressor public GString *
+  hash(CompLearnRealCompressor *rc,const GString *input) {
+    return NULL;
+  }
+  interface CompLearn:Real:Compressor public GString *
+  compress(CompLearnRealCompressor *rc,const GString *input) {
+    return NULL;
+  }
+  interface CompLearn:Real:Compressor public GString *
+  decompress(CompLearnRealCompressor *rc,const GString *input) {
+    return NULL;
+  }
+  interface CompLearn:Real:Compressor public GString *
+  canonical_extension(CompLearnRealCompressor *rc) {
+    return g_string_new("dat");
+  }
+  interface CompLearn:Real:Compressor public GString *
+  blurb(CompLearnRealCompressor *rc) {
+    return NULL;
+  }
+  interface CompLearn:Real:Compressor public GString *
+  name(CompLearnRealCompressor *rc) {
+    return NULL;
+  }
+  interface CompLearn:Real:Compressor public GString *
+  compressor_version(CompLearnRealCompressor *rc) {
+    return g_string_new("0.0.0");
+  }
+  interface CompLearn:Real:Compressor public GString *
+  binding_version(CompLearnRealCompressor *rc) {
+    return g_string_new("0.0.0");
+  }
+  interface CompLearn:Real:Compressor public gdouble
+  compressed_size(CompLearnRealCompressor *rc, const GString *input) {
+    double c;
+    GString *result = COMPLEARN_REAL_COMPRESSOR_GET_INTERFACE(rc)->compress(rc, input);
+    if (result == NULL) {
+      g_error(_("Compressor %s returned NULL block for compression"),
+    COMPLEARN_REAL_COMPRESSOR_GET_INTERFACE(rc)->name(rc)->str);
+    }
+    c = result->len * 8.0;
+    g_string_free(result, TRUE);
+    return c;
+  }
+  interface CompLearn:Real:Compressor public gboolean
+  is_hash_function(CompLearnRealCompressor *rc) {
+    return FALSE;
+  }
+  interface CompLearn:Real:Compressor public gboolean
+  is_just_size(CompLearnRealCompressor *rc) {
+    return FALSE;
+  }
+  interface CompLearn:Real:Compressor public gboolean
+  is_operational(CompLearnRealCompressor *self) {
+    return TRUE;
+  }
+  interface CompLearn:Real:Compressor public gboolean
+  is_compressible(CompLearnRealCompressor *rc, const GString *input) {
+    return TRUE;
+  }
+  interface CompLearn:Real:Compressor public gboolean
+  is_threadsafe(CompLearnRealCompressor *rc) {
+    return FALSE;
+  }
+  interface CompLearn:Real:Compressor public gboolean
+  is_decompressible(CompLearnRealCompressor *rc, const GString *input) {
+    return FALSE;
+  }
+  interface CompLearn:Real:Compressor public gboolean
+  is_private_property(CompLearnRealCompressor *rc, const char *input) {
+    return FALSE;
+  }
+  interface CompLearn:Real:Compressor public guint64
+  window_size(CompLearnRealCompressor *rc) {
+    return 0;
+  }
+}

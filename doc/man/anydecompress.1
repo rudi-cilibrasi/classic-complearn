@@ -1,0 +1,63 @@
+.TH ANYDECOMPRESS 1
+.SH NAME
+anydecompress \- use any CompLearn module data compressor to decompress a file
+.SH SYNOPSIS
+.B anydecompress [-L] [
+.I infile
+.B ] [
+.B outfile
+.B ]
+.SH DESCRIPTION
+.PP
+anydecompress is a simple and powerful generic decompression tool.  By default,
+it reads an input file from standard input.  If a command argument is given
+it will use that as input instead.  It produces an output file (or writes to
+stdout if reading from stdin) by scanning through all available CompLearn
+compression modules to try to find an accepting decompressor.  If it finds
+one, it uses it to decompress the input file.  If it fails to find an
+acceptable decompressor available it prints an error and returns an exit code.
+The user may optionally specify an output filename instead.
+.TP
+.SH OPTIONS
+.TP
+\fB\-L\fR, \fB\-\-list\fR
+list available builtin compressors as well as available compression modules.
+Modules are loaded from the modules subdirectory of /usr/lib/complearn.
+\fB\-h\fR, \fB\-\-help\fR
+show help options and exit
+.SH FILES
+.TP
+.I $HOME/.complearn/complearn.conf
+.TP
+.I /usr/share/complearn/complearn.conf
+.TP
+.I /usr/local/share/complearn/complearn.conf
+.TP
+ per-user and system configuration files
+see
+.BR complearn (5)
+for further details.
+
+.TP
+.I $HOME/.complearn/modules
+.TP
+.I /usr/lib/complearn/modules
+.TP
+ standard module automatic loading area.  Any shared object compressor
+modules found here will be loaded on startup.
+
+.SH ENVIRONMENT
+.TP
+.I COMPLEARNMODPATH
+.RS
+ If this environment variable is set, CompLearn will search the given directory and load any CompLearn compression modules it finds there (such as the
+libart.so example included with the CompLearn source distribution)
+none
+.SH DIAGNOSTICS
+none
+.SH "SEE ALSO"
+.BR anycompress (1),
+.BR complearn (5),
+.BR complearn-config (1),
+.BR maketree (1),
+.BR ncd (1)

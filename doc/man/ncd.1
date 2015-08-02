@@ -1,0 +1,127 @@
+.TH NCD 1
+.SH NAME
+ncd \- compute the Normalized Compression Distance
+.SH SYNOPSIS
+.B ncd [ -c
+.I compressor
+.B ] [ -o
+.I filename
+.B ] [ -bcdhLnqsv ] [-o filestem ] [ -d|f|l|p|t string ] ... [arg1] [arg2]
+.SH DESCRIPTION
+.PP
+The Normalized Compression Distance between two objects is defined as
+.TP
+.B "    NCD(a,b) = (C(a,b) - min(C(a),C(b))) / max(C(a),C(b))"
+.TP
+where 
+.TP 8
+.B C(a,b)
+means "the compressed size of the concatenation of a and b"
+.TP
+.B C(a)
+means "the compressed size of a"
+.TP
+.B C(b)
+means "the compressed size of b"
+  
+.PP
+.B ncd
+will print a non-negative number (typically, but not always, 0 <= x < 1.1)
+representing how different the two objects are.  Smaller numbers represent more
+similar files.  The largest number is somewhere near 1.  It is not exactly 1
+due to imperfections in compression techniques or other irregularities
+underlying compressor, but for most standard compression algorithms you are
+unlikely to see a number above 1.1 in any case.
+
+.PP
+Three compressors are available by default: bzlib, zlib and blocksort.  These
+may be selected with an option in the \fBcomplearn.conf\fR, see \fBcomplearn (5)\fR
+for more details.
+
+.SH ENUMERATION MODES
+.TP
+\fB\-f\fR, \fB\-\-file-mode\fR=\fIFILE\fR
+select file mode
+.TP
+\fB\-l\fR, \fB\-\-literal-mode\fR=\fISTRING\fR
+select string literal mode; this is the default.  The next argument is a string
+which, if containing white space, may be enclosed in double-quotes (")
+.TP
+\fB\-p\fR, \fB\-\-plainlist-mode\fR=\fIFILE\fR
+select plain list mode; argument is a file which contains a list of files to
+be individually evaluated
+.TP
+\fB\-t\fR, \fB\-\-termlist-mode\fR=\fIFILE\fR
+select term list mode; argument is a file which contains string literals to
+be individually evaluated
+.TP
+\fB\-d\fR, \fB\-\-directory-mode\fR=\fIDIR\fR
+select directory mode; argument is a path which contains files to be
+individually evaluated
+.SH OPTIONS
+.TP
+\fB\-c\fR, \fB\-\-compressor\fR=\fIcompressor\fR
+use and set compressor to use
+.TP
+\fB\-L\fR, \fB\-\-list\fR
+list available builtin compressors as well as available compression modules.
+Modules are loaded from the modules subdirectory of /usr/lib/complearn.
+.TP
+\fB\-s\fR, \fB\-\-size\fR
+get, in place of NCD, the compressed size of a single \fIFILE\fR, \fISTRING\fR, or \fIDIR\fR
+.TP
+\fB\-n\fR, \fB\-\-nexus\fR
+Nexus output format for distance matrix
+.TP
+\fB\-o\fR, \fB\-\-output\fR=\fIFILE\fR
+specify binary output filestem, if different from distmatrix, the default.
+An extension (.clb, .nex, or .txt) will be added, as appropriate to the
+output file type.
+.TP
+\fB\-b\fR, \fB\-\-binary\fR
+output results to binary file; the default name is distmatrix.clb
+.TP
+\fB\-q\fR, \fB\-\-quiet\fR
+suppress ASCII output and messages
+.TP
+\fB\-v\fR, \fB\-\-verbose\fR
+activate verbose mode
+.TP
+\fB\-h\fR, \fB\-\-help\fR
+show help options and exit
+.SH FILES
+
+.TP
+.I $HOME/.complearn/complearn.conf
+.TP
+.I /usr/share/complearn/complearn.conf
+.TP
+.I /usr/local/share/complearn/complearn.conf
+.TP
+ per-user and system configuration files
+see
+.BR complearn (5)
+for further details.
+
+.TP
+.I $HOME/.complearn/modules
+.TP
+.I /usr/lib/complearn/modules
+.TP
+ standard module automatic loading area.  Any shared object compressor
+modules found here will be loaded on startup.
+
+.SH ENVIRONMENT
+.TP
+.I COMPLEARNMODPATH
+.RS
+ If this environment variable is set, CompLearn will search the given directory and load any CompLearn compression modules it finds there (such as the
+libart.so example included with the CompLearn source distribution)
+none
+.SH DIAGNOSTICS
+none
+.SH "SEE ALSO"
+.BR anycompress (1),
+.BR anydecompress (1),
+.BR complearn (5),
+.BR maketree (1)

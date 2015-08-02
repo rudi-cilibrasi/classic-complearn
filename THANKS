@@ -1,0 +1,5 @@
+The CompLearn project thanks the following people for their contributions:
+ * Steven de Rooij for the blocksort fractional bit compressor.
+ * Dr. Paul Vitanyi for the mathematical analysis underpinning NCD.
+ * Anna Lissa Cruz for help with the website and documentation.
+ * Maarten Keijzer for librifying the ppmd compression module.

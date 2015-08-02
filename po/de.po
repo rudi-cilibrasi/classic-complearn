@@ -1,0 +1,578 @@
+# German translation of libcomplearn.
+# Copyright (C) 2003 - 2010 Rudi Cilibrasi.
+# This file is distributed under the same license as the libcomplearn package.
+# Chris Leick <c.leick@vollbio.de>, 2010.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: libcomplearn 1.1.6-1\n"
+"Report-Msgid-Bugs-To: cilibrar@cilibrar.com\n"
+"POT-Creation-Date: 2010-11-24 22:30+0100\n"
+"PO-Revision-Date: 2010-07-05 21:35+0100\n"
+"Last-Translator: Chris Leick <c.leick@vollbio.de>\n"
+"Language-Team: German <debian-l10n-german@lists.debian.org>\n"
+"Language: de\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: src/anycompress.c:43
+msgid ""
+"Usage: anycompress [options] <infile> [<outfile>]\n"
+"\n"
+"OPTIONS:                                                              \n"
+"  -c, --compressor=COMPNAME   set compressor to use                   \n"
+"  -h, --help                  print this help message                 \n"
+"  -L, --list                  list compressors                        \n"
+"  -v, --verbose               print extra detailed information        \n"
+"\n"
+msgstr ""
+"Aufruf: anycompress [Optionen] <Eingabedatei> [<Ausgabedatei>]\n"
+"\n"
+"OPTIONEN:                                                                  \n"
+"  -c, --compressor=COMPNAME  zu benutzendes Packprogramm angeben           \n"
+"  -h, --help                 diese Hilfe anzeigen                          \n"
+"  -L, --list                 Packprogramme auflisten                       \n"
+"  -v, --verbose              zusätzliche detaillierte Information ausgeben \n"
+"\n"
+
+#: src/anycompress.c:83
+msgid "Unrecognized option: "
+msgstr "Unbekannte Option: "
+
+#: src/anycompress.c:89
+#, c-format
+msgid "Compressor %s is a non-coding compressor."
+msgstr "Packprogramm %s ist ein nicht codierendes Packprogramm."
+
+#: src/anycompress.c:106 src/anydecompress.c:103
+msgid "Don't know what to do with extra arguments."
+msgstr ""
+"Es ist nicht bekannt, was mit den zusätzlichen Argumenten getan werden soll."
+
+#: src/anycompress.c:108 src/anydecompress.c:105
+#, c-format
+msgid "Opening output file %s"
+msgstr "Ausgabedatei %s wird geöffnet"
+
+#: src/anydecompress.c:42
+msgid ""
+"Usage: anydecompress [options] <infile> [<outfile>]\n"
+"\n"
+"OPTIONS:                                                              \n"
+"  -h, --help                  print this help message                 \n"
+"  -L, --list                  list compressors                        \n"
+"  -v, --verbose               print extra detailed information        \n"
+"\n"
+msgstr ""
+"Aufruf: anydecompress [Optionen] <Eingabedatei> [<Ausgabedatei>]\n"
+"\n"
+"OPTIONEN:                                                                  \n"
+"  -h, --help                 diese Hilfe anzeigen                          \n"
+"  -L, --list                 Packprogramme auflisten                       \n"
+"  -v, --verbose              zusätzliche detaillierte Information ausgeben \n"
+"\n"
+
+#: src/anydecompress.c:80 complearn-ncd.gob:234 src/complearn-ncd.gob:266
+#, c-format
+msgid "Unrecognized option '%c'"
+msgstr "Unbekannte Option »%c«"
+
+#: src/anydecompress.c:115
+#, c-format
+msgid "Found matching compressor %s"
+msgstr "Passendes Packprogramm %s gefunden"
+
+#: src/anydecompress.c:121
+msgid "Cannot find matching decompressor."
+msgstr "Es kann kein passendes Entpackprogramm gefunden werden."
+
+#: src/cloutput.c:170 src/cloutput.c:196
+msgid "Cannot write NULL gsl_matrix, exitting."
+msgstr "»NULL gsl_matrix« kann nicht geschrieben werden, wird beendet."
+
+#: src/cloutput.c:173
+msgid "Invalid gsl_matrix size, cannot write.  Exitting."
+msgstr ""
+"Ungültige Größe der »gsl_matrix«, kann nicht geschrieben werden. Wird "
+"beendet."
+
+#: src/cloutput.c:184
+msgid "untitled"
+msgstr "ohne Titel"
+
+#: src/cloutput.c:186
+msgid "unknown"
+msgstr "unbekannt"
+
+#: src/cloutput.c:328
+msgid "Cannot load bzlib"
+msgstr "»bzlib« kann nicht geladen werden"
+
+#: src/cloutput.c:349
+msgid "Cannot load bzlib compressor."
+msgstr "Packprogramm »bzlib« kann nicht geladen werden"
+
+#: src/cloutput.c:371
+msgid "Failed to parse document."
+msgstr "Auswerten des Dokuments fehlgeschlagen."
+
+#: src/cloutput.c:422
+msgid "Error, no labels for dimension 1."
+msgstr "Fehler, keine Beschriftungen für Dimension 1."
+
+#: src/cloutput.c:427
+msgid "Error, no labels for dimension 2."
+msgstr "Fehler, keine Beschriftungen für Dimension 2."
+
+#: complearn-compressor-driver.gob:110 src/complearn-compressor-driver.gob:110
+msgid "Must set_compressor before trying to compress."
+msgstr ""
+"Bevor das Packen versucht wird, muss »set_compressor« ausgeführt werden"
+
+#: complearn-compressor-driver.gob:112 src/complearn-compressor-driver.gob:112
+#, c-format
+msgid "Compressor index %d out of bounds."
+msgstr "Packprogrammindex %d nicht erlaubt."
+
+#: src/complearn-config.c:17
+#, c-format
+msgid "Usage: complearn-config [options]\n"
+msgstr "Aufruf: complearn-config [Optionen]\n"
+
+#: complearn-environment.c:272 src/complearn-environment.gob:146
+msgid "module_path"
+msgstr "module_path"
+
+#: complearn-environment.c:273 src/complearn-environment.gob:147
+msgid "directory where modules can be found"
+msgstr "Verzeichnis, in dem Module gefunden werden können"
+
+#: complearn-environment.c:281 src/complearn-environment.gob:154
+msgid "verbose"
+msgstr "detailliert"
+
+#: complearn-environment.c:282 src/complearn-environment.gob:155
+msgid "print extra detailed information"
+msgstr "zusätzliche detaillierte Informationen ausgeben"
+
+#: complearn-environment.c:290 src/complearn-environment.gob:162
+msgid "nice_level"
+msgstr "nice_level"
+
+#: complearn-environment.c:291 src/complearn-environment.gob:163
+msgid "scheduling priority, higher is less CPU"
+msgstr ""
+"Planungspriorität, je höher der Wert, desto niedriger die CPU-Priorität"
+
+#: complearn-environment.gob:118 src/complearn-environment.gob:120
+msgid "Cannot make more than one environment, use complearn_init() to begin."
+msgstr ""
+"Es kann nicht mehr als eine Umgebung erstellt werden, benutzen Sie zum "
+"Beginnen »complearn_init()«"
+
+#: complearn-environment.gob:195 src/complearn-environment.gob:209
+#, c-format
+msgid "Trying to read modules directory %s"
+msgstr "Es wird versucht, das Modulverzeichnis %s zu lesen"
+
+#: complearn-environment.gob:202 src/complearn-environment.gob:216
+#, c-format
+msgid "Trying to load module %s"
+msgstr "Es wird versucht, das Modul %s zu laden"
+
+#: complearn-environment.gob:206 src/complearn-environment.gob:220
+#, c-format
+msgid "Error loading module %s"
+msgstr "Fehler beim Laden von Modul %s"
+
+#: complearn-environment.gob:207 src/complearn-environment.gob:221
+#, c-format
+msgid "Loaded module %s successfully"
+msgstr "Modul %s erfolgreich geladen"
+
+#: complearn-environment.gob:229 src/complearn-environment.gob:243
+#, c-format
+msgid "Compressor %s is not operational."
+msgstr "Packprogramm %s ist nicht einsatzbereit."
+
+#: complearn-environment.gob:271 src/complearn-environment.gob:285
+#, c-format
+msgid "Reading config file %s."
+msgstr "Konfigurationsdatei %s wird gelesen."
+
+#: complearn-environment.gob:279 src/complearn-environment.gob:293
+#, c-format
+msgid "Cannot find group %s"
+msgstr "Gruppe %s kann nicht gefunden werden"
+
+#: complearn-environment.gob:297 src/complearn-environment.gob:311
+#, c-format
+msgid "Cannot open file %s for writing"
+msgstr "Datei %s kann nicht zum Schreiben geöffnet werden"
+
+#: complearn-environment.gob:392 complearn-environment.gob:482
+#: src/complearn-environment.gob:406 src/complearn-environment.gob:496
+#, c-format
+msgid "Type %s unknown"
+msgstr "Typ %s ist unbekannt"
+
+#: complearn-environment.gob:450 src/complearn-environment.gob:464
+#, c-format
+msgid "Warning: cannot set nice priority to level %d"
+msgstr "Warnung: Nice-Priorität kann nicht auf Stufe %d gesetzt werden"
+
+#: complearn-environment.gob:451 src/complearn-environment.gob:465
+#, c-format
+msgid "Set nice priority level to %d"
+msgstr "Nice-Priorität auf Stufe %d setzen"
+
+#: complearn-environment.gob:486 src/complearn-environment.gob:500
+#, c-format
+msgid "No property named %s in object."
+msgstr "Objekt enthält keine Eigenschaft mit Namen %s."
+
+#: complearn-environment.gob:493 src/complearn-environment.gob:507
+#, c-format
+msgid "No name for object at %p"
+msgstr "Kein Name für Objekt bei %p"
+
+#: complearn-environment.gob:495 src/complearn-environment.gob:509
+#, c-format
+msgid "NULL keyfile for %s."
+msgstr "Schlüsseldatei NULL für %s."
+
+#: complearn-environment.gob:497 src/complearn-environment.gob:511
+#, c-format
+msgid "No object at %s."
+msgstr "Kein Objekt bei %s"
+
+#: complearn-external-compressor.c:220
+#: src/complearn-external-compressor.gob:52
+msgid "Decompression Command"
+msgstr "Entpackbefehl"
+
+#: complearn-external-compressor.c:221
+#: src/complearn-external-compressor.gob:53
+msgid "Command to decompress from stdin to stdout"
+msgstr "Befehl, um von STDIN nach STDOUT zu entpacken"
+
+#: complearn-external-compressor.c:222 complearn-external-compressor.c:231
+#: src/complearn-external-compressor.gob:54
+#: src/complearn-external-compressor.gob:61
+msgid "cat"
+msgstr "cat"
+
+#: complearn-external-compressor.c:229
+#: src/complearn-external-compressor.gob:59
+msgid "Compression Command"
+msgstr "Packbefehl"
+
+#: complearn-external-compressor.c:230
+#: src/complearn-external-compressor.gob:60
+msgid "Command to compress from stdin to stdout"
+msgstr "Befehl, um von STDIN nach STDOUT zu packen"
+
+#: complearn-external-compressor.gob:89
+#: src/complearn-external-compressor.gob:89
+msgid " and "
+msgstr " und "
+
+#: complearn-external-compressor.gob:89
+#: src/complearn-external-compressor.gob:89
+msgid " external commands."
+msgstr " externe Befehle."
+
+#: complearn-ncd.c:255 src/complearn-ncd.gob:110
+msgid "output_filestem"
+msgstr "output_filestem"
+
+#: complearn-ncd.c:256 src/complearn-ncd.gob:111
+msgid "prefix of output filename for matrix"
+msgstr "Präfix des Ausgabedateinamens für die Matrix"
+
+#: complearn-ncd.c:257 src/complearn-ncd.gob:112
+msgid "distmatrix"
+msgstr "Distmatrix"
+
+#: complearn-ncd.c:264 src/complearn-ncd.gob:118
+msgid "compressor"
+msgstr "Packprogramm"
+
+#: complearn-ncd.c:265 src/complearn-ncd.gob:119
+msgid "default compressor to use"
+msgstr "zu benutzendes Standardpackprogramm"
+
+#: complearn-ncd.c:266 src/complearn-ncd.gob:120
+msgid "zlib"
+msgstr "zlib"
+
+#: complearn-ncd.c:273 src/complearn-ncd.gob:126
+msgid "chop_names"
+msgstr "chop_names"
+
+#: complearn-ncd.c:274 src/complearn-ncd.gob:127
+msgid "remove common prefixes/suffixes from names"
+msgstr "übliche Prä-/Suffixe von Namen entfernen"
+
+#: complearn-ncd.c:282 src/complearn-ncd.gob:134
+msgid "write_txt"
+msgstr "write_txt"
+
+#: complearn-ncd.c:283 src/complearn-ncd.gob:135
+msgid "write text format matrix to file"
+msgstr "Textformat-Matrix in Datei schreiben"
+
+#: complearn-ncd.c:291 src/complearn-ncd.gob:142
+msgid "clb_output"
+msgstr "clb_output"
+
+#: complearn-ncd.c:292 src/complearn-ncd.gob:143
+msgid "print a clb-format output distance matrix"
+msgstr "eine Ausgabe-Distanzmatrix im »clb-format« ausgeben"
+
+#: complearn-ncd.c:300 src/complearn-ncd.gob:150
+msgid "plain_output"
+msgstr "plain_output"
+
+#: complearn-ncd.c:301 src/complearn-ncd.gob:151
+msgid "print a plain format output distance matrix"
+msgstr "eine Ausgabe-Distanzmatrix im Klartext ausgeben"
+
+#: complearn-ncd.c:309 src/complearn-ncd.gob:158
+msgid "nexus_output"
+msgstr "nexus_output"
+
+#: complearn-ncd.c:310 src/complearn-ncd.gob:159
+msgid "print a NEXUS format output distance matrix"
+msgstr "eine Ausgabe-Distanzmatrix im NEXUS-Format ausgeben"
+
+#: complearn-ncd.c:318 src/complearn-ncd.gob:166
+msgid "zero_diagonal"
+msgstr "zero_diagonal"
+
+#: complearn-ncd.c:319 src/complearn-ncd.gob:167
+msgid "zero diagonal when arguments are the same"
+msgstr "Nulldiagonale, falls die Argumente gleich sind"
+
+#: complearn-ncd.c:327 src/complearn-ncd.gob:174
+msgid "svd_project"
+msgstr "svd_project"
+
+#: complearn-ncd.c:328 src/complearn-ncd.gob:175
+msgid "perform SVD projection on the matrix"
+msgstr "eine SVD-Projektion auf der Matrix durchführen"
+
+#: complearn-ncd.c:336 src/complearn-ncd.gob:182
+msgid "html_output"
+msgstr "html_output"
+
+#: complearn-ncd.c:337 src/complearn-ncd.gob:183
+msgid "print HTML table in text output mode"
+msgstr "HTML-Tabelle im Textausgabemodus ausgeben"
+
+#: complearn-ncd.c:345 src/complearn-ncd.gob:190
+msgid "show_labels"
+msgstr "show_labels"
+
+#: complearn-ncd.c:346 src/complearn-ncd.gob:191
+msgid "print labels in default text output mode"
+msgstr "Beschriftungen im Standard-Textausgabemodus ausgeben"
+
+#: complearn-ncd.c:354 src/complearn-ncd.gob:198
+msgid "just_size"
+msgstr "just_size"
+
+# NCD --> Neighbouring Color Dependence
+# http://elcvia.uab.es/index.php/elcvia/article/viewPDFInterstitial/149/155
+#: complearn-ncd.c:355 src/complearn-ncd.gob:199
+msgid "only calculate compressed size, not NCD"
+msgstr "nur gepackte Größe berechnen, keine NCD"
+
+#: complearn-ncd.c:363 src/complearn-ncd.gob:206
+msgid "average_matrix"
+msgstr "average_matrix"
+
+#: complearn-ncd.c:364 src/complearn-ncd.gob:207
+msgid "average matrix before outputting result"
+msgstr "Durchschnittsmatrix vor der Ausgabe des Ergebnisses"
+
+#: complearn-ncd.gob:71 src/complearn-ncd.gob:71
+msgid "Only one ncd object may be created."
+msgstr "Es könnte nur ein NCD-Objekt erstellt worden sein."
+
+#: complearn-ncd.gob:265 src/complearn-ncd.gob:297
+msgid ""
+"Usage: ncd [options] ...  <arg>\n"
+"\n"
+"Use one argument form to do simple single-object or object-vector     \n"
+"compression or\n"
+"       ncd [options] ...  <arg1> <arg2>\n"
+"  for compression-matrix or NCD matrix calculation\n"
+"OPTIONS:                                                              \n"
+"  -b, --binary-output         enable binary output mode for matrix    \n"
+"  -c, --compressor=COMPNAME   set compressor to use                   \n"
+"  -d, --directory-mode        directory of files                      \n"
+"  -f, --file-mode             a single file                           \n"
+"  -h, --help                  print this help message                 \n"
+"  -l, --literal-mode          a single string literal      (default)  \n"
+"  -L, --list                  list compressors                        \n"
+"  -n, --nexus-output          output NEXUS format distance matrix     \n"
+"  -o, --output=FILESTEM       use FILESTEM instead of distmatrix      \n"
+"  -p, --plainlist-mode        lines with each line a file             \n"
+"  -q, --quiet                 do not print plain text distance matrix \n"
+"  -t, --termlist-mode         lines with each line a literal          \n"
+"  -s, --size                  just compressed sizes in bits no NCD    \n"
+"  -S, --server                stdio server for easy language bindings \n"
+"  -v, --verbose               print extra detailed information        \n"
+"  -V, --version               print complearn library version         \n"
+"\n"
+msgstr ""
+"Aufruf: ncd [Optionen] ...  <arg>\n"
+"\n"
+"Benutzen Sie ein Argumentenformat für eine einfache Einzelobjekt- oder \n"
+"Objekt-Vektor-Kompression oder\n"
+"       ncd [Optionen] ...  <arg1> <arg2>\n"
+"  für Kompressionsmatrix- oder NCD-Matrix-Berechnung.\n"
+"OPTIONEN:                                                                   \n"
+"  -b, --binary-output         binären Ausgabemodus für Matrix "
+"einschalten   \n"
+"  -c, --compressor=COMPNAME   zu benutzendes Packprogramm "
+"setzen            \n"
+"  -d, --directory-mode        Verzeichnis der "
+"Dateien                       \n"
+"  -f, --file-mode             eine einzelne "
+"Datei                           \n"
+"  -h, --help                  diese Hilfe "
+"ausgeben                          \n"
+"  -l, --literal-mode          eine einzelne wörtliche Zeichenkette "
+"(Vorgabe)\n"
+"  -L, --list                  Packprogramme "
+"auflisten                       \n"
+"  -n, --nexus-output          eine Distanzmatrix im NEXUS-Format "
+"ausgeben   \n"
+"  -o, --output=DATEISTAMM     DATEISTAMM anstelle der Distanzmatrix "
+"benutzen\n"
+"  -p, --plainlist-mode        Zeilen mit je einer Datei pro "
+"Zeile           \n"
+"  -q, --quiet                 keine Klartext-Distanzmatrix "
+"ausgeben         \n"
+"  -t, --termlist-mode         Zeilen mit je einem Literal pro "
+"Zeile         \n"
+"  -s, --size                  nur gepackte Größe in Bits, kein "
+"NCD          \n"
+"  -S, --server                STDIO-Server für einfache "
+"Sprachanbindungen   \n"
+"  -v, --verbose               detaillierte Zusatzinformationen "
+"ausgeben     \n"
+"  -V, --version               Complearn-Bibliotheksversion "
+"ausgeben         \n"
+"\n"
+
+#: complearn-ncd.gob:375 src/complearn-ncd.gob:407
+#, c-format
+msgid "Available compressors:\n"
+msgstr "Verfügbare Packprogramme:\n"
+
+#: complearn-ncd.gob:415 src/complearn-ncd.gob:447
+msgid "Unhandled interpretation\n"
+msgstr "Nicht behandelte Auslegung\n"
+
+#: complearn-ncd.gob:525 src/complearn-ncd.gob:557
+#, c-format
+msgid "Cannot load compressor %s"
+msgstr "Packprogramm %s kann nicht geladen werden"
+
+#: complearn-rcbzlib.c:304 src/complearn-rcbzlib.gob:129
+msgid "small"
+msgstr "klein"
+
+#: complearn-rcbzlib.c:305 src/complearn-rcbzlib.gob:130
+msgid "Small memory footprint"
+msgstr "Kleiner Speichergrundriss"
+
+#: complearn-rcbzlib.c:313 src/complearn-rcbzlib.gob:137
+msgid "verbosity"
+msgstr "Detailgrad"
+
+#: complearn-rcbzlib.c:314 src/complearn-rcbzlib.gob:138
+msgid "BZip2 Verbosity Level"
+msgstr "BZip2-Detailstufe"
+
+#: complearn-rcbzlib.c:324 src/complearn-rcbzlib.gob:147
+msgid "window-block-size"
+msgstr "window-block-size"
+
+#: complearn-rcbzlib.c:325 src/complearn-rcbzlib.gob:148
+msgid "Window size in 100000-byte chunks"
+msgstr "Fenstergröße in 100000-Byte-Stücken"
+
+#: complearn-rcbzlib.c:335 src/complearn-rcbzlib.gob:157
+msgid "work-factor"
+msgstr "work-factor"
+
+#: complearn-rcbzlib.c:336 src/complearn-rcbzlib.gob:158
+msgid "Work factor for bzlib"
+msgstr "Arbeitsfaktor für »bzlib«"
+
+#: complearn-rcbzlib.gob:201 src/complearn-rcbzlib.gob:201
+msgid "libbz2 (a.k.a. bzlib) blocksort style"
+msgstr "»blocksort«-Stil von »libbz2« (alias »bzlib«)"
+
+#: complearn-rczlib.c:280 src/complearn-rczlib.gob:119
+msgid "compression_level"
+msgstr "compression_level"
+
+#: complearn-rczlib.c:281 src/complearn-rczlib.gob:120
+msgid "Compression level for ZLib, 1-9"
+msgstr "Kompressionsstufe für ZLib, 1-9"
+
+#: complearn-rczlib.gob:149 src/complearn-rczlib.gob:149
+#, c-format
+msgid "Unknown error: zlibBuff returned %d"
+msgstr "Unbekannter Fehler: »zlibBuff« gab %d zurück"
+
+#: complearn-real-compressor-adaptor.gob:86
+#: src/complearn-real-compressor-adaptor.gob:86
+#, c-format
+msgid "Compressor %s returned NULL block for compression"
+msgstr "Packprogramm %s gab NULL-Block für Kompression zurück"
+
+#: complearn-vcblocksort.gob:277 src/complearn-vcblocksort.gob:277
+msgid "non-coding blocksort with fractional bit return"
+msgstr "nicht codierter Blocksort mit gebrochener Bit-Rückgabe"
+
+#: src/util.c:87
+#, c-format
+msgid "Cannot open directory %s"
+msgstr "Verzeichnis %s kann nicht geöffnet werden"
+
+#: src/util.c:107
+#, c-format
+msgid "Cannot open file %s"
+msgstr "Datei %s kann nicht geöffnet werden"
+
+#: src/util.c:117
+#, c-format
+msgid "Cannot read line from file %s: %s"
+msgstr "Zeile aus Datei %s kann nicht gelesen werden: %s"
+
+#: src/util.c:155
+#, c-format
+msgid "Cannot change directory to %s"
+msgstr "Wechsel in das Verzeichnis %s fehlgeschlagen"
+
+#: src/util.c:167
+#, c-format
+msgid "Cannot open directory %s. Error: %s"
+msgstr "Verzeichnis %s kann nicht geöffnet werden. Fehler: %s"
+
+#: src/util.c:188
+#, c-format
+msgid "Cannot open file %s for writing."
+msgstr "Datei %s kann nicht zum Schreiben geöffnet werden"
+
+#: src/util.c:199
+#, c-format
+msgid "Cannot open file %s for reading"
+msgstr "Datei %s kann nicht zum Lesen geöffnet werden"

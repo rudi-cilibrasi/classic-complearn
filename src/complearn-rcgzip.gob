@@ -1,0 +1,65 @@
+requires 2.0.0
+%headertop{
+#include <glib/garray.h>
+#include <libintl.h>
+#include "real-compressor.h"
+#include "complearn-real-compressor-adaptor.h"
+#include "complearn-external-compressor.h"
+%}
+
+%{
+/*
+Copyright (c) 2003-2008 Rudi Cilibrasi, Rulers of the RHouse
+All rights reserved.
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions
+are met:
+1. Redistributions of source code must retain the above copyright
+   notice, this list of conditions and the following disclaimer.
+2. Redistributions in binary form must reproduce the above copyright
+   notice, this list of conditions and the following disclaimer in the
+   documentation and/or other materials provided with the distribution.
+3. Neither the name of the University nor the names of its contributors
+   may be used to endorse or promote products derived from this software
+   without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE RULERS AND CONTRIBUTORS ``AS IS'' AND
+ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ARE DISCLAIMED.  IN NO EVENT SHALL THE RULERS OR CONTRIBUTORS BE LIABLE
+FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+SUCH DAMAGE.
+*/
+#include <stdio.h>
+#define _( O ) gettext( O )
+#include "complearn.h"
+%}
+class CompLearn:RCGZip from CompLearn:External:Compressor
+ (interface CompLearn:Real:Compressor)
+{
+  public G:Object *
+  new(void) {
+    GObject *ret = (GObject *) GET_NEW;
+    g_object_set(G_OBJECT(ret), "compression_cmd", "gzip -c",
+                                "decompression_cmd", "gunzip -c", NULL);
+    return G_OBJECT (ret);
+  }
+  public guint64 window_size(CompLearnRealCompressor *rc) {
+    return 32768*8;
+  }
+  interface CompLearn:Real:Compressor public GString *
+  canonical_extension(CompLearnRealCompressor *rc) {
+    return g_string_new("gz");
+  }
+  interface CompLearn:Real:Compressor public CompLearn:Real:Compressor *
+    clone(CompLearnRealCompressor *rc) {
+    CompLearnRCGZip *res = COMPLEARN_RCGZIP(complearn_rcgzip_new());
+    return COMPLEARN_REAL_COMPRESSOR(res);
+    }
+}

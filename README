@@ -1,0 +1,42 @@
+CompLearn 1.0
+
+Welcome to CompLearn
+
+an open-source data mining package using data compression
+
+This software is released under the BSD license.
+
+This package supports NCD and quartet tree search as documented at
+
+http://complearn.org/
+
+Please see the website for more info!  Good luck with your experiments! :)
+
+Quick Install
+------------------
+
+CompLearn requires the Gnu Scientific Libary, GSL, to be installed before
+attempting to build.  You may use the command
+gsl-config --libs
+to check this if you like; if it prints something with -L and -l, it means
+GSL is installed.  If you would rather let the complearn system check, you
+will be notified when you attempt to configure as the first step in the
+following build and install sequence.
+
+./configure
+make
+make install
+
+If you do not have root access, you may need to do something like this:
+
+./configure --prefix=$HOME/complearn
+make
+make install
+
+In order to build the graphical demo, clfun, or the Google SOAP compressor
+you must have certain packages installed as documented on the website.
+
+--
+
+Rudi Cilibrasi
+cilibrar@cilibrar.com

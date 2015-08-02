@@ -1,0 +1,134 @@
+NCD SERVER PROTOCOL DOCUMENT
+version 1
+
+by
+Rudi Cilibrasi (cilibrar@cilibrar@com)
+
+The CompLearn system is designed to allow maximum easy and efficiency
+for research and statistical uses of data compression programs.  It is
+designed for maximum development convenience according to Erlang idioms,
+although it does not actually use Erlang at this time.  The CompLearn
+system is written in C.  It installs a library and at least one executable
+called ncd.
+
+The
+
+ncd --server
+
+command is meant to be used by high-level language bindings to provide
+for maximum efficiency, portability, reliability, and convenience.  The
+server communicates with another process via a bidirectional pipe.  Commands
+are sent to the ncd server process, compression is done, and results are
+returned via stdout.  The communication protocol is inspired by Erlang
+packet format.  In particular,
+
+Every command is a packet.  Each packet is encoded as a 4-byte integer
+prepended to an arbitrary-sized block of data.  The 4-byte integer is
+written in big endian order.  It does not include the size of the size tag
+itself.
+
+Every command packet consists of the following items:
+a string (representing a command name)
+zero or more optional parameters (as necessary)
+
+A string is encoded the same way a packet is encoded; that is, with a 4-byte
+big endian length tag prepended.  All integers are encoded in big-endian
+format in the ncd server.
+
+All commands are listed in src/uncd.c in the DECLCMD / MAKECMD sections.
+
+The first command to the ncd server should be compressor_list, and it takes
+no arguments.  It will return an array of strings representing all known
+compressor types.  An array of items is encoded as a big-endian integer
+count, followed by a repetition of that many of the underlying type.  In this
+case, the underlying type is string.  The result will be presented as a
+wrapped packet containing a big-endian integer followed by several
+strings.  One of these names should be used to create a new compressor
+object with the next command: new_compressor.  It must be passed one string
+argument representing the name of the compressor to load.  One example
+that works on most systems is the following:
+
+"new_compressor"
+"zlib"
+
+The ncd server will try to load the named compressor.  If it succeeds, it
+returns the result as a pointer.  Pointers are encoded like strings.  They
+happen to be decimal integers ASCII strings.  They are opaque but must be
+used (usually as the first argument) to all functions that require a pointer.
+
+Once a compressor has been loaded, it can be used as follows:
+"blurb" followed by the pointer - string returned from new_compressor will
+return a string describing a compressor in more detail.
+
+Summary of Protocol Basics
+
+We have already mentioned that integers are encoded as 4-byte big endian.
+Strings are encoded with 4-byte integer length tags prepended.  Pointers are
+encoded as strings.  Arrays are encoded as 4-byte integer count tags prepended
+followed by <count> repetitions of the underlying type.  This is useful for
+the array of strings returned by list_compressors.
+
+Advanced Protocol Features
+
+A compressor can be freed with free_compressor.  A compressor driver can be
+allocated to do fast compressions of single datablocks or pairs in batches
+by using new_compressordriver and passing in a single pointer argument that
+represents a compressor to use.  Next, data blocks must be added.  Data
+blocks are encoded as strings as before.  For this, use the cd_store
+command and pass one argument.  It returns an integer that is used to identify
+this block when referring to it later.  Finally, a vector of single
+compressed sizes can be calculated with cd_compress_single, or a matrix of
+sizes can be calculated with cd_compress_pair.  For more flexible options,
+generic control is available via cd_compression_sequence.  This function
+takes an array of arrays of integers.  Each child array has size 1 or 2,
+and represents a single or pairwise compression task.  These tasks may
+be done in parallel, but all will be done before the function returns.
+
+For compressed sizes, double-precision floating-point numbers are returned.
+These are encoded as strings: ASCII decimal numbers with the '%lf' printf
+format.  Some functions are predicates returning a true/false value.
+Boolean values are encoded as integers.  In cd_compress_pair,
+the returned matrix is encoded as follows:
+
+size1
+size2
+entry(0,0)
+entry(0,1)
+entry(0,2)
+...
+entry(size1-1, size2-1)
+
+In order to call the function, two arguments must be specified in addition
+to the compressor driver pointer as the first argument.  The second and
+third must both be integer arrays.  The first array represents the objects to
+be used as "rows" and the second represents the objects to be used as
+"columns".  The number of compressions will be the product of the sizes of
+each of the two arrays passed into this function.
+
+In cd_compress_single, the vector is encoded as an array of doubles.
+There are no arguments because every data block is compressed.
+
+For an example of how to use the compression system, please look at the
+Ruby binding available for download from http://complearn.org/
+
+There is also a perl binding that somewhat works but is not 100% done yet.
+We hope that others will write bindings for their favorite language.  Since
+we use a bidirectional pipe communication infrastructure, we can avoid
+introducing any link dependency whatsoever.   This carries many advantages,
+not the least of which is simplicity and ease in writing higher level language
+bindings.  The same ncd command can be used regardless of which language
+wrapper is involved without recompiling the complearn system.
+Our current highest-priority language binding todo list is as follows:
+
+Language      |   Development level (>7 = good, >2 is started, 0 is nothing)
+Ruby          |      9
+C             |      9
+C++           |      9
+Perl          |      5
+Erlang        |      4
+R             |      3
+Python        |      0
+C#            |      0
+Java          |      0
+
+We are actively seeking help on any of the above language bindings.

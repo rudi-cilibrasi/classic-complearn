@@ -1,0 +1,4 @@
+This is the initial release of the libcomplearn sample application.
+It shows how to use automake to detect CompLearn and how to compile and
+link a very simple C program.  Please see the API documentation for more
+info.

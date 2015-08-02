@@ -1,0 +1,74 @@
+.TH COMPLEARN 5
+.SH NAME
+complearn \- file format for the complearn configuration file
+.SH SYNOPSIS
+.B $HOME/.complearn/complearn.conf
+- controls options for CompLearn
+.SH DESCRIPTION
+
+The CompLearn toolkit is a suite of utilities to analyze arbitrary data.
+The commands
+.BR ncd (1),
+.BR maketree (1),
+all use the \fBcomplearn.conf\fR configuration file.
+First, the user home directory (\fI$HOME\fR) is searched for a directory called
+\fB.complearn\fR.  Within this directory, CompLearn reads a file called
+\fBcomplearn.conf\fR, a text file structured in the .desktop file format.
+If CompLearn can not locate this file, default values are used.  CompLearn
+will create a skeletal example file for easy reference in this case.
+A configuration file specified in this manner overrides all other options.
+
+For more information on the CompLearn project, please see
+\fIhttp://www.complearn.org\fR
+
+The complearn configuration file is a simple line-based format.
+Blank lines are allowed.  Comments are designated with a \fB#\fR sign
+at the start of the line only.  Each line is either a comment, a blank,
+a group designator surrounded in []'s, or a name=value pair.  Some
+configuration options are listed below; to find the rest, simply run
+ncd and look in the $HOME/.complearn/complearn.conf file for a
+full listing of all current property settings.
+
+.TP
+\fBcompressor\fR: string (ncd (1))
+The builtin compressor to be used.  Valid values are: \fBbzip\fR, \fBzlib\fR,
+and \fBgoogle\fR.
+
+.TP
+\fBblocksize\fR: int (ncd (1), bzip compressor)
+An integer from 1 to 9. 9 gives the best compression but takes the most memory.
+Default 9.
+
+.TP
+\fBworkfactor\fR: int (ncd (1), bzip compressor)
+An integer from 0 to 250 and controls how the compression phase behaves when
+presented with the worst case, highly repetitive, input date.  CompLearn's
+default value of 30 gives reasonable behavior over a wide range of
+circumstances.
+
+.SH EXAMPLE
+
+.nf
+
+# comments are written like this
+
+[complearn]
+# print extra detailed information
+    verbose=yes
+# scheduling priority, higher is less CPU
+    nice-level=19
+
+[ncd]
+
+# default compressor to use
+    compressor=zlib
+# etc
+
+.fi
+
+.SH FILES
+.I $HOME/.complearn/complearn.conf
+.RS per-user configuration file, overrides systemwide default
+.SH "SEE ALSO"
+.BR ncd (1),
+.BR maketree (1)

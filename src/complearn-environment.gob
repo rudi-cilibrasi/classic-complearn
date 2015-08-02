@@ -1,0 +1,546 @@
+requires 2.0.0
+%headertop{
+#include <glib.h>
+#include <glib/gstdio.h>
+#include "real-compressor.h"
+
+// no longer being used; for API? - alcruz
+void complearn_init(void);
+%}
+
+%{
+/*
+Copyright (c) 2003-2008 Rudi Cilibrasi, Rulers of the RHouse
+All rights reserved.
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions
+are met:
+1. Redistributions of source code must retain the above copyright
+   notice, this list of conditions and the following disclaimer.
+2. Redistributions in binary form must reproduce the above copyright
+   notice, this list of conditions and the following disclaimer in the
+   documentation and/or other materials provided with the distribution.
+3. Neither the name of the University nor the names of its contributors
+   may be used to endorse or promote products derived from this software
+   without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE RULERS AND CONTRIBUTORS ``AS IS'' AND
+ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ARE DISCLAIMED.  IN NO EVENT SHALL THE RULERS OR CONTRIBUTORS BE LIABLE
+FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+SUCH DAMAGE.
+*/
+#include <stdio.h>
+#include <stdlib.h>
+#include <glib.h>
+#include <gmodule.h>
+#include <libintl.h>
+#include "complearn.h"
+#include "complearn-environment-private.h"
+
+#include "complearn-rcbzip.h"
+#include "complearn-rcbzlib.h"
+#include "complearn-rcgzip.h"
+#include "complearn-rczlib.h"
+#include "privconf.h"
+
+#if HAVE_UNISTD_H
+#include <unistd.h>
+#endif
+
+#if HAVE_ERRNO_H
+#include <errno.h>
+#endif
+
+#define _(O) gettext(O)
+
+#define PROJECTNAME "complearn"
+#define CONFIGNAME (PROJECTNAME ".conf")
+
+static CompLearnEnvironment *cl;
+static CompLearnEnvironmentClass *cltc;
+
+static int alphacomp(const void *va, const void *vb)
+{
+  char **a = (char **) va, **b = (char **) vb;
+  return strcmp(*a, *b);
+}
+
+static void foreachIncr(GQuark key_id, gpointer data, gpointer user_data)
+{
+  gint32 *k = (gint32 *) user_data;
+  (*k)++;
+}
+
+static void foreachNamer(GQuark key_id, gpointer data, gpointer user_data)
+{
+  char *curname;
+  gchar ***k = (gchar ***) user_data;
+  CompLearnRealCompressor *rc = data;
+  GString *result;
+  result = real_compressor_name(COMPLEARN_REAL_COMPRESSOR(rc));
+  g_assert(result != NULL);
+  g_assert(result->str != NULL);
+  curname = result->str;
+  g_string_free(result, FALSE);
+  (**k) = curname;
+  (*k) += 1;
+}
+
+// no longer being used ; for API? - alcruz
+void complearn_init(void)
+{
+  g_type_init();
+  complearn_environment_top();
+}
+
+%}
+
+class CompLearn:Environment from G:Object
+{
+  private GSList *propdeffile;
+  private GData *grouplist;
+  private GData *complist;
+  private GHashTable *backnames;
+  class_init(klass) {
+    cltc = klass;
+  }
+  public G:Object *
+  new(void) {
+    GObject *ret = (GObject *) GET_NEW;
+    CompLearnEnvironment *self = COMPLEARN_ENVIRONMENT(ret);
+    if (cl)
+      g_error(_("Cannot make more than one environment, use complearn_init() to begin."));
+    cl = self;
+    g_datalist_init(&self->_priv->grouplist);
+    g_datalist_init(&self->_priv->complist);
+    self->_priv->propdeffile = NULL;
+    self->_priv->backnames = g_hash_table_new(g_direct_hash, g_direct_equal);
+    SET_DEFAULT_PROPS(PROJECTNAME, COMPLEARN_ENVIRONMENT_GET_CLASS, self);
+    complearn_ncd_top();
+    complearn_environment_standard_initialization();
+    complearn_environment_apply_configs(TRUE, TRUE);
+    return G_OBJECT (ret);
+  }
+  public GString *
+  to_s(void) {
+    GString * toPrint = g_string_new("");
+    char buf[256];
+    sprintf(buf, "module_path     : %s\n", complearn_environment_get_module_path(complearn_environment_top()));
+    g_string_append( toPrint, buf);
+    sprintf(buf, "verbose         : %d\n", complearn_environment_get_verbose(complearn_environment_top()));
+    g_string_append( toPrint, buf);
+    sprintf(buf, "nice_level      : %d\n", complearn_environment_get_nice_level(complearn_environment_top()));
+    g_string_append( toPrint, buf);
+    return toPrint;
+  }
+  private char *module_path;
+  property STRING module_path
+                      (nick = _("module_path"),
+                       blurb = _("directory where modules can be found"),
+                       default_value = "/usr/lib/complearn/modules",
+                       flags = CONSTRUCT,
+                       link,
+                       export);
+  private gboolean verbose;
+  property BOOLEAN verbose
+                      (nick = _("verbose"),
+                       blurb = _("print extra detailed information"),
+                       default_value = FALSE,
+                       flags = CONSTRUCT,
+                       link,
+                       export);
+  private gint32 nice_level;
+  property INT nice_level
+                      (nick = _("nice_level"),
+                       blurb = _("scheduling priority, higher is less CPU"),
+                       default_value = 19,
+                       minimum = -19,
+                       maximum = 19,
+                       flags = CONSTRUCT,
+                       link,
+                       export);
+  public CompLearn:Environment *
+top(void) {
+    if (cl == NULL)
+      complearn_environment_new();
+    g_assert(cl != NULL);
+    return(cl);
+  }
+  public char *version(void) {
+    return g_strdup(complearn_package_version);
+  }
+  public CompLearn:Real:Compressor *
+  load_compressor_named( const char *name ) {
+    CompLearnEnvironment *clb = complearn_environment_top();
+    void *result = g_datalist_get_data(&clb->_priv->complist, name);
+    if (result == NULL)
+      return NULL;
+    CompLearnRealCompressor *rc = COMPLEARN_REAL_COMPRESSOR(result);
+    return real_compressor_clone(rc);
+  }
+  public G:Object *
+  get_nameable(const char *name) {
+    CompLearnEnvironment *clb = complearn_environment_top();
+    void *result = g_datalist_get_data(&clb->_priv->grouplist, name);
+    return result ? G_OBJECT(result) : NULL;
+  }
+  public void register_nameable(const char *name, G:Object *val) {
+    CompLearnEnvironment *clb = complearn_environment_top();
+    if (complearn_environment_get_nameable(name)) {
+      //fprintf(_("Cannot register_nameable more than one object under name %s"), name);
+      return;
+    }
+    char *dupname = g_strdup(name);
+    g_datalist_set_data(&clb->_priv->grouplist, dupname, val);
+    g_hash_table_insert(clb->_priv->backnames, val, dupname);
+  }
+  private void load_modules(void) {
+    GModule *gm;
+    GError *err = NULL;
+    char *dirname = complearn_environment_get_module_path(complearn_environment_top());
+    g_notice(_("Trying to read modules directory %s"), dirname);
+    GDir *d = g_dir_open(dirname, 0,&err);
+    if (err)
+      return;
+    const char *n;
+    while ( (n = g_dir_read_name(d)) ) {
+      char *cur = g_build_filename(dirname, n, NULL);
+      g_notice(_("Trying to load module %s"), cur);
+      if (g_file_test(cur, G_FILE_TEST_IS_REGULAR)) {
+        gm = g_module_open(cur, G_MODULE_BIND_LOCAL | G_MODULE_BIND_LAZY);
+        if (gm == NULL)
+          g_error(_("Error loading module %s"), n);
+        g_notice(_("Loaded module %s successfully"), cur);
+      }
+      g_free(cur);
+    }
+  g_dir_close(d);
+  }
+  public void register_compressor_and_nameable(G:Object *obj) {
+    GString *gname = real_compressor_name(COMPLEARN_REAL_COMPRESSOR(obj));
+    char *name = gname->str;
+    complearn_environment_register_compressor(COMPLEARN_REAL_COMPRESSOR(obj));
+    complearn_environment_register_nameable(name, G_OBJECT(obj));
+  }
+  private void load_builtins(void) {
+    complearn_environment_register_compressor_and_nameable(complearn_rcbzlib_new());
+    complearn_environment_register_compressor_and_nameable(complearn_rczlib_new());
+  }
+  public void register_compressor(CompLearn:RealCompressor *rc) {
+  GString *name = real_compressor_name(rc);
+  if (g_datalist_get_data(&cl->_priv->complist, name->str)) {
+    goto donenow;
+  }
+  if (!real_compressor_is_operational(rc)) {
+    g_notice(_("Compressor %s is not operational."), name->str);
+    goto donenow;
+  }
+  g_datalist_set_data(&cl->_priv->complist, name->str, rc);
+  donenow:
+    g_string_free(name, TRUE);
+  }
+
+public int
+compressor_count(void) {
+    CompLearnEnvironment *clb = complearn_environment_top();
+  gint32 acc = 0;
+  g_datalist_foreach(&clb->_priv->complist, foreachIncr, &acc);
+  return acc;
+}
+public char **
+compressor_list(void) {
+  CompLearnEnvironment *clb = complearn_environment_top();
+  int cc;
+  int i;
+  static char **compnames, **dc;
+  cc = complearn_environment_compressor_count();
+  compnames = calloc(sizeof(gpointer), cc+1);
+  dc = compnames;
+  g_datalist_foreach(&clb->_priv->complist, foreachNamer, &dc);
+  for (i = 0; i < cc; i += 1) {
+    g_assert(compnames[i] != NULL);
+  }
+  qsort(compnames, cc, sizeof(gpointer), alphacomp);
+  return compnames;
+}
+
+private char *build_home_filename(const char *inp) {
+  return g_build_filename(g_get_home_dir(), "." PROJECTNAME, inp, NULL);
+}
+private void apply_config_file(const char *fname) {
+  GError *err = NULL;
+  GKeyFile *k = g_key_file_new();
+  int i;
+  gchar **groups = NULL;
+  if (!g_key_file_load_from_file(k, fname, 0, &err))
+    goto donenow;
+  g_notice(_("Reading config file %s."), fname);
+  guint32 len;
+  groups = g_key_file_get_groups(k, &len);
+  for (i = 0; groups[i]; i += 1) {
+    if (strcmp(groups[i], PROJECTNAME) == 0)
+      continue;
+    GObject *obj = complearn_environment_get_nameable( groups[i]);
+    if (obj == NULL)
+      g_warning(_("Cannot find group %s"), groups[i]);
+    else
+      complearn_environment_apply_keyfile(k, obj);
+  }
+  donenow:
+    g_key_file_free(k);
+    g_strfreev(groups);
+}
+
+  public GString *lib_version(void) {
+    return g_string_new(complearn_package_version);
+}
+public void
+make_home_config_file(void) {
+  CompLearnEnvironment *clb = complearn_environment_top();
+  GSList *lines = NULL, *it;
+  FILE *fp = fopen(complearn_environment_get_home_config_filename(), "w");
+  if (fp == NULL) {
+    g_warning(_("Cannot open file %s for writing"), complearn_environment_get_home_config_filename());
+  }
+  lines = clb->_priv->propdeffile;
+  for (it = lines; it; it = g_slist_next(it)) {
+    fprintf(fp, "%s", ((GString *) (it->data))->str);
+  }
+  fclose(fp);
+}
+public char *
+get_home_config_filename(void) {
+  return g_build_filename(g_get_home_dir(), "." PROJECTNAME,CONFIGNAME, NULL);
+}
+public char **
+get_config_filename_list(void) {
+  const gchar * const *sysdirs;
+  const gchar * const *cur;
+  sysdirs = g_get_system_data_dirs();
+  GSList *names = NULL, *it;
+  for (cur = sysdirs; *cur; cur += 1) {
+    names=g_slist_append(names, g_build_filename(*cur, PROJECTNAME,CONFIGNAME, NULL));
+  }
+  names=g_slist_append(names, complearn_environment_get_home_config_filename());
+  char **result = calloc(sizeof(*result), g_slist_length(names)+1);
+  int i = 0;
+  for (it = names; it; it = g_slist_next(it))
+    result[i++] = it->data;
+  g_slist_free(names);
+  return result;
+}
+
+public void
+apply_configs(gboolean env_part, gboolean other_part) {
+  CompLearnEnvironment *clb = complearn_environment_top();
+  char **filesToRead = complearn_environment_get_config_filename_list();
+  char **filename;
+  GError *err;
+  if (env_part) {
+    for (filename = filesToRead; *filename; filename++) {
+      err = NULL;
+      GKeyFile *kf = g_key_file_new();
+      if (g_key_file_load_from_file(kf, *filename, 0, &err))
+        complearn_environment_apply_keyfile(kf, G_OBJECT(clb));
+      g_key_file_free(kf);
+    }
+  }
+  if (other_part) {
+    for (filename = filesToRead; *filename; filename++) {
+      complearn_environment_apply_config_file(*filename);
+    }
+  }
+}
+
+public void
+show_properties(void) {
+  CompLearnEnvironment *clb = complearn_environment_top();
+  //printf("average_matrix: %d\n", complearn_environment_get_average_matrix(clb));
+  printf("nice_level:     %d\n", complearn_environment_get_nice_level(clb));
+//  printf("compressor:     %s\n", complearn_environment_get_compressor(clb));
+}
+public char *
+find_name(G:Object *obj) {
+  CompLearnEnvironment *clb = complearn_environment_top();
+  return g_hash_table_lookup(clb->_priv->backnames, obj);
+}
+public void
+    register_property( G:Object *obj, GParamSpec *gps, G:Value *v) {
+  static char *lastProp = NULL;
+  char *kname = gps->name;
+  char *vstr = NULL;
+  char buf[128];
+  CompLearnEnvironment *clb = complearn_environment_top();
+  char *name = complearn_environment_find_name( obj);
+  if (name == NULL)
+    return;
+  if (lastProp != name) {
+    GString *gbuf = g_string_new(""); g_string_sprintf(gbuf, "\n# [%s]\n\n", name);
+    clb->_priv->propdeffile = g_slist_append(clb->_priv->propdeffile, gbuf);
+    lastProp = name;
+  }
+  switch(gps->value_type) {
+    case G_TYPE_BOOLEAN:
+      vstr = g_strdup(g_value_get_boolean(v) ? "yes" : "no");
+      break;
+    case G_TYPE_DOUBLE:
+      sprintf(buf, "%f", g_value_get_double(v));
+      vstr = g_strdup(buf);
+      break;
+    case G_TYPE_STRING:
+      vstr = g_strdup(g_value_get_string(v));
+      break;
+    case G_TYPE_INT:
+      sprintf(buf, "%d", g_value_get_int(v));
+      vstr = g_strdup(buf);
+      break;
+    default:
+      g_error(_("Type %s unknown"), G_PARAM_SPEC_TYPE_NAME(gps));
+  }
+  g_assert(vstr != NULL);
+  GString *gbuf = g_string_new("");
+  g_string_sprintf(gbuf, "# %s\n#    %s=%s\n", g_param_spec_get_blurb(gps), kname, vstr);
+  clb->_priv->propdeffile = g_slist_append(clb->_priv->propdeffile, gbuf);
+  g_free(vstr);
+}
+public gboolean
+check_homedir_subdir(void) {
+  GError *err = NULL;
+  char *wanted = complearn_environment_build_home_filename(".");
+  GDir *d = g_dir_open(wanted,0,&err);
+  free(wanted);
+  if (d) {
+    g_dir_close(d);
+    return TRUE;
+  }
+  return FALSE;
+}
+public void glog_func(const gchar *log_domain, GLogLevelFlags log_level, const
+gchar *message, gpointer user_data)
+{
+  if (log_level == G_LOG_LEVEL_NOTICE) {
+    if (complearn_environment_get_verbose(complearn_environment_top()))
+      fprintf(stderr, "D:%s:%s\n", log_domain, message);
+  }
+  else {
+    g_log_default_handler(log_domain, log_level, message, user_data);
+  }
+}
+
+public void handle_log_domain(const gchar *log_domain) {
+  g_log_set_handler(log_domain, G_LOG_LEVEL_NOTICE, complearn_environment_glog_func, NULL);
+}
+
+public void
+standard_initialization(void) {
+  int retval;
+  bindtextdomain (complearn_package_name, "/usr/share/locale");
+  g_log_set_default_handler(complearn_environment_glog_func, NULL);
+  complearn_environment_apply_configs(TRUE, FALSE);
+  complearn_environment_load_builtins();
+  complearn_environment_load_modules();
+  complearn_ncd_top();
+  CompLearnEnvironment *clb = complearn_environment_top();
+  if (!complearn_environment_check_homedir_subdir()) {
+    char *wanted = complearn_environment_build_home_filename(".");
+    wanted[strlen(wanted)-2] = '\0';
+    g_mkdir(wanted, 0700);
+    g_free(wanted);
+  }
+  if (!g_file_test(complearn_environment_get_home_config_filename(), G_FILE_TEST_EXISTS))
+    complearn_environment_make_home_config_file();
+#if HAVE_UNISTD_H
+   errno = 0;
+   retval = nice(clb->_priv->nice_level);
+  if (errno != 0)
+    g_warning(_("Warning: cannot set nice priority to level %d"), clb->_priv->nice_level);
+   g_notice(_("Set nice priority level to %d"), clb->_priv->nice_level);
+#endif
+}
+  public void adjust_parameter(
+GObject *obj,
+const char *kname,
+const char *val) {
+    GValue gval = {0,};
+    GObjectClass *goc = G_OBJECT_GET_CLASS(obj);
+    GParamSpec *gps;
+    gps = g_object_class_find_property(goc, kname);
+    if (gps) {
+      switch(gps->value_type) {
+        case G_TYPE_BOOLEAN:
+          g_value_init(&gval, G_TYPE_BOOLEAN);
+          gboolean v = (val[0] == 'y' || val[0] == 'Y' || val[0] == '1');
+          g_value_set_boolean(&gval, v);
+          break;
+        case G_TYPE_DOUBLE:
+          g_value_init(&gval, G_TYPE_DOUBLE);
+          g_value_set_double(&gval, atof(val));
+          break;
+        case G_TYPE_STRING:
+          g_value_init(&gval, G_TYPE_STRING);
+          g_value_set_string(&gval, val);
+          break;
+        case G_TYPE_INT:
+          g_value_init(&gval, G_TYPE_INT);
+          g_value_set_int(&gval, atoi(val));
+          break;
+        default:
+          g_error(_("Type %s unknown"), G_PARAM_SPEC_TYPE_NAME(gps));
+      }
+    }
+    else
+      g_error(_("No property named %s in object."), kname);
+    g_object_set_property(obj, kname, &gval);
+  }
+  public void
+  apply_keyfile(G:KeyFile *kf, G:Object *obj) {
+    char *name = complearn_environment_find_name( obj);
+    if (name == NULL)
+      g_error(_("No name for object at %p"), obj);
+    if (kf == NULL)
+      g_error(_("NULL keyfile for %s."), name);
+    if (obj == NULL)
+      g_error(_("No object at %s."), name);
+    GError *err = NULL;
+    char **kname;
+    kname = g_key_file_get_keys(kf, name, NULL, &err);
+    if (kname == NULL || err != NULL) // No keys
+      return;
+    int i;
+    for (i = 0; kname[i]; i += 1) {
+      char *val;
+      err = NULL;
+      val = g_key_file_get_string(kf, name, kname[i], &err);
+      complearn_environment_adjust_parameter(obj, kname[i], val);
+    }
+    g_strfreev(kname);
+  }
+  private char *build_module_dir_default(void) {
+    return "/usr/lib/complearn/modules";
+  }
+  public void print_version(void) {
+    printf("%s\n", complearn_package_version);
+  }
+  public void set_verbose_mode(void) {
+    complearn_environment_set_verbose(complearn_environment_top(), TRUE);
+  }
+  public GString *convert_to_hex(GString *inp) {
+  char *hbuf;
+  hbuf = calloc((inp->len+10)*2, 1);
+  int i;
+  for (i = 0; i < inp->len; i += 1)
+    sprintf(hbuf+i*2, "%02x", ((unsigned char *) (inp->str))[i]);
+  GString *result = g_string_new(hbuf);
+  free(hbuf);
+  return result;
+  }
+
+}

@@ -1,0 +1,197 @@
+requires 2.0.0
+%headertop{
+#include <glib/garray.h>
+#include <libintl.h>
+#include "real-compressor.h"
+#include "complearn-real-compressor-adaptor.h"
+%}
+
+%{
+/*
+Copyright (c) 2003-2008 Rudi Cilibrasi, Rulers of the RHouse
+All rights reserved.
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions
+are met:
+1. Redistributions of source code must retain the above copyright
+   notice, this list of conditions and the following disclaimer.
+2. Redistributions in binary form must reproduce the above copyright
+   notice, this list of conditions and the following disclaimer in the
+   documentation and/or other materials provided with the distribution.
+3. Neither the name of the University nor the names of its contributors
+   may be used to endorse or promote products derived from this software
+   without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE RULERS AND CONTRIBUTORS ``AS IS'' AND
+ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ARE DISCLAIMED.  IN NO EVENT SHALL THE RULERS OR CONTRIBUTORS BE LIABLE
+FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+SUCH DAMAGE.
+*/
+#include <stdio.h>
+#define _( O ) gettext( O )
+#include <sys/types.h>
+#include <sys/wait.h>
+#include "complearn-external-compressor.h"
+#include "complearn-external-compressor-private.h"
+#include "complearn.h"
+%}
+class CompLearn:External:Compressor from CompLearn:Real:Compressor:Adaptor
+ (interface CompLearn:Real:Compressor)
+{
+  private char * compression_cmd;
+  private char * decompression_cmd;
+  property STRING decompression_cmd
+                      (nick = _("Decompression Command"),
+                       blurb = _("Command to decompress from stdin to stdout"),
+                       default_value = _("cat"),
+                       flags = CONSTRUCT,
+                       link,
+                       export);
+  property STRING compression_cmd
+                      (nick = _("Compression Command"),
+                       blurb = _("Command to compress from stdin to stdout"),
+                       default_value = _("cat"),
+                       flags = CONSTRUCT,
+                       link,
+                       export);
+  public G:Object *
+  new(void) {
+    GObject *ret = (GObject *) GET_NEW;
+    return G_OBJECT (ret);
+  }
+  interface CompLearn:Real:Compressor public GString *
+  compress(CompLearnRealCompressor *rc,const GString *input) {
+    CompLearnExternalCompressor *ec = COMPLEARN_EXTERNAL_COMPRESSOR(rc);
+    char *cmd = complearn_external_compressor_get_compression_cmd(ec);
+    return complearn_external_compressor_transform_with_external_command(ec,cmd,input);
+  }
+  interface CompLearn:Real:Compressor public GString *
+  decompress(CompLearnRealCompressor *rc,const GString *input) {
+    CompLearnExternalCompressor *ec = COMPLEARN_EXTERNAL_COMPRESSOR(rc);
+    char *cmd = complearn_external_compressor_get_decompression_cmd(ec);
+    return complearn_external_compressor_transform_with_external_command(ec,cmd,input);
+  }
+  interface CompLearn:Real:Compressor public GString *
+  blurb(CompLearnRealCompressor *rc) {
+    GString *result;
+    char *cw = complearn_external_compressor_compression_command_word(COMPLEARN_EXTERNAL_COMPRESSOR(rc));
+    char *dw = complearn_external_compressor_decompression_command_word(COMPLEARN_EXTERNAL_COMPRESSOR(rc));
+    char *cc1 = g_filename_display_name(cw);
+    char *cd1 = g_filename_display_name(dw);
+    result = g_string_new(g_strconcat(cc1, _(" and "), cd1, _(" external commands."), NULL));
+    g_free(cw);
+    g_free(dw);
+    g_free(cc1);
+    g_free(cd1);
+    return result;
+  }
+  public GString *transform_with_external_command(CompLearnExternalCompressor *ec, const char *cmd, const GString *inp) {
+    GPid child_pid;
+    GError *err = NULL;
+    GIOChannel *gstdin, *gstdout, *gstderr;
+    char **cmdargv;
+    gint pstdin, pstdout, pstderr;
+    cmdargv = g_strsplit(cmd," ",0);
+    g_spawn_async_with_pipes(complearn_make_temp_dir(), cmdargv, NULL,  // envp
+      G_SPAWN_SEARCH_PATH | G_SPAWN_DO_NOT_REAP_CHILD, NULL, NULL, &child_pid,
+      &pstdin, &pstdout, &pstderr, &err);
+    if (err)
+      goto donenow;
+    g_strfreev(cmdargv);
+    gstdin = g_io_channel_unix_new(pstdin);
+    gstdout = g_io_channel_unix_new(pstdout);
+    gstderr = g_io_channel_unix_new(pstderr);
+    guint realwrite = 0;
+    GIOError gioerr;
+    gioerr = g_io_channel_write(gstdin, inp->str, inp->len, &realwrite);
+    if (gioerr == G_IO_ERROR_NONE) {
+  #define CHUNKSIZE 512
+      char dbuf[CHUNKSIZE];
+      guint readlen;
+      int rv, status;
+      g_io_channel_close(gstdin);
+      GByteArray *result = g_byte_array_new();
+      while (1) {
+        readlen = 0;
+        gioerr = g_io_channel_read(gstdout, (char *) dbuf, CHUNKSIZE, &readlen);
+        if (gioerr != G_IO_ERROR_NONE || readlen == 0)
+          break;
+        g_byte_array_append(result, (unsigned char *) dbuf, readlen);
+      }
+      rv = waitpid(-1, &status, 0);
+      if (WIFEXITED(status) && WEXITSTATUS(status) != 0) {
+        g_byte_array_free(result, FALSE); result = NULL;
+        goto donenow;
+      }
+      GString *tblock = g_string_new_len((char *) result->data,  result->len);
+      g_byte_array_free(result, TRUE);
+      return tblock;
+    }
+    else {
+      donenow:
+      return NULL;
+    }
+  }
+  public char *decompression_command_word(CompLearnExternalCompressor *ec) {
+    char *result = NULL, **sp;
+    sp = g_strsplit(complearn_external_compressor_get_decompression_cmd(ec)," ",2);
+    result = g_strdup(sp[0]);
+    g_strfreev(sp);
+    return result;
+  }
+  public char *compression_command_word(CompLearnExternalCompressor *ec) {
+    char *result = NULL, **sp;
+    sp =g_strsplit(complearn_external_compressor_get_compression_cmd(ec)," ",2);
+    result = g_strdup(sp[0]);
+    g_strfreev(sp);
+    return result;
+  }
+  interface CompLearn:Real:Compressor public GString *
+  name(CompLearnRealCompressor *rc) {
+    GString *result;
+    char *cw = complearn_external_compressor_compression_command_word(COMPLEARN_EXTERNAL_COMPRESSOR(rc));
+    result = g_string_new(g_filename_display_name(cw));
+    g_free(cw);
+    return result;
+  }
+  interface CompLearn:Real:Compressor public GString *
+  compressor_version(CompLearnRealCompressor *rc) {
+    return g_string_new("0.0.0");
+  }
+  interface CompLearn:Real:Compressor public GString *
+  binding_version(CompLearnRealCompressor *rc) {
+    return g_string_new("0.0.0");
+  }
+  interface CompLearn:Real:Compressor public gboolean
+  is_decompressible(CompLearnRealCompressor *rc, const GString *input) {
+    GString *result = real_compressor_decompress(rc, input);
+    if (result)
+      g_string_free(result, TRUE);
+    return result ? TRUE : FALSE;
+  }
+  interface CompLearn:Real:Compressor public gboolean
+  is_operational(CompLearnRealCompressor *rc) {
+    GString *s1 = g_string_new("teststr"), *s2 = NULL, *s3 = NULL;
+    s2 = real_compressor_compress(rc, s1);
+    if (s2)
+      s3 = real_compressor_decompress(rc, s2);
+    if (s3 == NULL || strcmp(s1->str, s3->str) != 0)
+      return FALSE;
+    g_string_free(s1, TRUE);
+    g_string_free(s2, TRUE);
+    g_string_free(s3, TRUE);
+    return TRUE;
+  }
+  interface CompLearn:Real:Compressor public guint64
+  window_size(CompLearnRealCompressor *rc) {
+    return 0;
+  }
+}

@@ -1,0 +1,97 @@
+2010-11-24  tille <tille@debian.org>
+	* version 1.1.7
+	* Fix Russian translation, add German translation
+
+2010-01-10  cilibrar    <cilibrar@cilibrar.com>
+
+	* version 1.1.6 released.
+	* several packaging fixes for stricter linking.
+
+2008-03-03  cilibrar    <cilibrar@cilibrar.com>
+
+	* version 1.1.2 released.
+	* added default case support for non-OpenMP systems.
+	* included many macros in acinclude.m4 to ease configuration.
+
+2007-11-26  cilibrar    <cilibrar@cilibrar.com>
+
+	* version 1.0.6 released.
+	* fixed name and compressor registration problems.
+	* removed installation of private config headers and PACKAGE_VERSION stuff.
+	* added version printing capability (--version / -V) to ncd command.
+	* changed option-mode behavior to the old way, that allows heterogeneous
+	ncd modes.
+	* Simplified include headers so now just #include <complearn.h> is
+	sufficient for all purposes.
+
+2007-09-29  cilibrar    <cilibrar@cilibrar.com>
+
+	* version 1.0.3 released.
+	* added clone to real compressor.
+	* added OpenMP support for multi-core architectures.  (2x-4x speedup)
+
+2007-09-24  cilibrar    <cilibrar@cilibrar.com>
+
+	* fixed memory leak, added g_object_unref capabilities.
+	* moved modules libart, ppmdx, lzmax to new source packages.
+
+2007-07-24  cilibrar    <cilibrar@cilibrar.com>
+
+	* fixed bug in ncd matrix calculation.
+	* improved darwin packaging.
+
+2007-07-21  cilibrar    <cilibrar@cilibrar.com>
+
+	* added clarification to licensing in many source files.
+	* added .ru translation.
+
+2007-05-12  gettextize  <bug-gnu-gettext@gnu.org>
+
+	* m4/gettext.m4: New file, from gettext-0.16.1.
+	* m4/iconv.m4: New file, from gettext-0.16.1.
+	* m4/lib-ld.m4: New file, from gettext-0.16.1.
+	* m4/lib-link.m4: New file, from gettext-0.16.1.
+	* m4/lib-prefix.m4: New file, from gettext-0.16.1.
+	* m4/nls.m4: New file, from gettext-0.16.1.
+	* m4/po.m4: New file, from gettext-0.16.1.
+	* m4/progtest.m4: New file, from gettext-0.16.1.
+	* m4/codeset.m4: New file, from gettext-0.16.1.
+	* m4/glibc2.m4: New file, from gettext-0.16.1.
+	* m4/glibc21.m4: New file, from gettext-0.16.1.
+	* m4/intdiv0.m4: New file, from gettext-0.16.1.
+	* m4/intl.m4: New file, from gettext-0.16.1.
+	* m4/intldir.m4: New file, from gettext-0.16.1.
+	* m4/intmax.m4: New file, from gettext-0.16.1.
+	* m4/inttypes_h.m4: New file, from gettext-0.16.1.
+	* m4/inttypes-pri.m4: New file, from gettext-0.16.1.
+	* m4/lcmessage.m4: New file, from gettext-0.16.1.
+	* m4/lock.m4: New file, from gettext-0.16.1.
+	* m4/longdouble.m4: New file, from gettext-0.16.1.
+	* m4/longlong.m4: New file, from gettext-0.16.1.
+	* m4/printf-posix.m4: New file, from gettext-0.16.1.
+	* m4/size_max.m4: New file, from gettext-0.16.1.
+	* m4/stdint_h.m4: New file, from gettext-0.16.1.
+	* m4/uintmax_t.m4: New file, from gettext-0.16.1.
+	* m4/ulonglong.m4: New file, from gettext-0.16.1.
+	* m4/visibility.m4: New file, from gettext-0.16.1.
+	* m4/wchar_t.m4: New file, from gettext-0.16.1.
+	* m4/wint_t.m4: New file, from gettext-0.16.1.
+	* m4/xsize.m4: New file, from gettext-0.16.1.
+	* Makefile.am (EXTRA_DIST): Add config.rpath.
+	* configure.ac (AM_GNU_GETTEXT_VERSION): Bump to 0.16.1.
+
+2007-05-07  gettextize  <bug-gnu-gettext@gnu.org>
+
+	* Makefile.am (SUBDIRS): Add po.
+	* configure.ac (AC_OUTPUT): Add po/Makefile.in.
+
+2007-05-07  gettextize  <bug-gnu-gettext@gnu.org>
+
+	* Makefile.am (ACLOCAL_AMFLAGS): New variable.
+	(EXTRA_DIST): Add config.rpath, m4/ChangeLog.
+	* configure.ac (AC_OUTPUT): Add po/Makefile.in.
+
+2007-04-26  Rudi Cilibrasi <cilibrar@cilibrar.com>
+
+	* Finally converted to glib GObject.  Now cleaner and more powerful.
+

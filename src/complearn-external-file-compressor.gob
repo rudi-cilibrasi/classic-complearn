@@ -1,0 +1,120 @@
+requires 2.0.0
+%headertop{
+#include <glib/garray.h>
+#include <libintl.h>
+#include "real-compressor.h"
+#include "complearn-real-compressor-adaptor.h"
+%}
+
+%{
+/*
+Copyright (c) 2003-2008 Rudi Cilibrasi, Rulers of the RHouse
+All rights reserved.
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions
+are met:
+1. Redistributions of source code must retain the above copyright
+   notice, this list of conditions and the following disclaimer.
+2. Redistributions in binary form must reproduce the above copyright
+   notice, this list of conditions and the following disclaimer in the
+   documentation and/or other materials provided with the distribution.
+3. Neither the name of the University nor the names of its contributors
+   may be used to endorse or promote products derived from this software
+   without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE RULERS AND CONTRIBUTORS ``AS IS'' AND
+ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ARE DISCLAIMED.  IN NO EVENT SHALL THE RULERS OR CONTRIBUTORS BE LIABLE
+FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+SUCH DAMAGE.
+*/
+#include <stdio.h>
+#define _( O ) gettext( O )
+#include <sys/types.h>
+#include <sys/wait.h>
+#include "complearn-external-file-compressor.h"
+#include "complearn-external-file-compressor-private.h"
+#include "complearn.h"
+%}
+class CompLearn:External:File:Compressor from CompLearn:Real:Compressor:Adaptor
+ (interface CompLearn:Real:Compressor)
+{
+  public G:Object *
+  new(void) {
+    GObject *ret = (GObject *) GET_NEW;
+    return G_OBJECT (ret);
+  }
+public GString *transform_with_external_command(CompLearnExternalFileCompressor *ec, const char *cmd, const GString *inp, const char *infname, const char *outfname) {
+  GPid child_pid;
+  GError *err = NULL;
+  GIOChannel *gstdin, *gstdout, *gstderr;
+  GString *tblock = NULL;
+  char **cmdargv;
+  char *olddir;
+  gint pstdin, pstdout, pstderr;
+  g_assert(cmd);
+  cmdargv = g_strsplit(cmd," ",0);
+  char *mytdir = complearn_make_temp_dir();
+  olddir = complearn_chdir(mytdir);
+  complearn_write_file(infname, inp);
+  g_spawn_async_with_pipes(mytdir, cmdargv, NULL,  // envp
+    G_SPAWN_SEARCH_PATH | G_SPAWN_DO_NOT_REAP_CHILD, NULL, NULL, &child_pid,
+    &pstdin, &pstdout, &pstderr, &err);
+  if (err)
+    goto donenow;
+  g_strfreev(cmdargv);
+  gstdin = g_io_channel_unix_new(pstdin);
+  gstdout = g_io_channel_unix_new(pstdout);
+  gstderr = g_io_channel_unix_new(pstderr);
+  GIOError gioerr;
+#define CHUNKSIZE 512
+  unsigned char dbuf[CHUNKSIZE+1];
+  guint readlen;
+  int rv, status;
+  g_io_channel_close(gstdin);
+  while (1) {
+    readlen = 0;
+    gioerr = g_io_channel_read(gstdout, (char *) dbuf, CHUNKSIZE, &readlen);
+    if (readlen > 0)
+      continue;
+    gioerr = g_io_channel_read(gstderr, (char *) dbuf, CHUNKSIZE, &readlen);
+    if (readlen > 0)
+      continue;
+    g_io_channel_close(gstdout);
+    g_io_channel_close(gstderr);
+    break;
+  }
+  rv = waitpid(-1, &status, 0);
+  if (WIFEXITED(status) && WEXITSTATUS(status) != 0) {
+    goto donenow;
+  }
+
+  tblock = complearn_read_whole_file(outfname);
+
+  donenow:
+  complearn_chdir(olddir);
+  complearn_remove_directory_recursively(mytdir, 0);
+  return tblock;
+
+}
+
+  interface CompLearn:Real:Compressor public gboolean
+  is_decompressible(CompLearnRealCompressor *rc, const GString *input) {
+    GString *result = real_compressor_decompress(rc, input);
+    if (result)
+      g_string_free(result, TRUE);
+    return result ? TRUE : FALSE;
+  }
+
+  interface CompLearn:Real:Compressor public gboolean
+  is_operational(CompLearnRealCompressor *rc) {
+    return FALSE;
+  }
+}

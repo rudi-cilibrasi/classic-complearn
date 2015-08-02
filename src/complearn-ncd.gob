@@ -1,0 +1,565 @@
+requires 2.0.0
+%headertop{
+#include <glib.h>
+#include <gsl/gsl_matrix.h>
+%}
+%{
+/*
+Copyright (c) 2003-2008 Rudi Cilibrasi, Rulers of the RHouse
+All rights reserved.
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions
+are met:
+1. Redistributions of source code must retain the above copyright
+   notice, this list of conditions and the following disclaimer.
+2. Redistributions in binary form must reproduce the above copyright
+   notice, this list of conditions and the following disclaimer in the
+   documentation and/or other materials provided with the distribution.
+3. Neither the name of the University nor the names of its contributors
+   may be used to endorse or promote products derived from this software
+   without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE RULERS AND CONTRIBUTORS ``AS IS'' AND
+ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ARE DISCLAIMED.  IN NO EVENT SHALL THE RULERS OR CONTRIBUTORS BE LIABLE
+FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+SUCH DAMAGE.
+*/
+#include <stdio.h>
+#include <stdlib.h>
+#include <glib.h>
+#include <libintl.h>
+#include <unistd.h>
+#include <getopt.h>
+#include "real-compressor.h"
+#include "complearn.h"
+#include "complearn-ncd.h"
+#include "complearn-ncd-private.h"
+
+#define _(O) gettext(O)
+
+#define NCD_INTERP_LITERAL   0
+#define NCD_INTERP_FILE      1
+#define NCD_INTERP_TERMLIST  2
+#define NCD_INTERP_FILELIST  3
+#define NCD_INTERP_DIRECTORY 4
+
+static CompLearnNcd *clncd;
+extern int umain(void);
+
+
+%}
+
+class CompLearn:Ncd from G:Object
+{
+  private int interp;
+  private GSList *listlist;
+  class_init(klass) {
+  }
+  public G:Object *
+  new(void) {
+    GObject *ret = (GObject *) GET_NEW;
+    CompLearnNcd *self = COMPLEARN_NCD(ret);
+    if (clncd)
+      g_error(_("Only one ncd object may be created."));
+    clncd = self;
+    SET_DEFAULT_PROPS("ncd", COMPLEARN_NCD_GET_CLASS, self);
+    return G_OBJECT (ret);
+  }
+  public GString *
+  to_s(void) {
+    GString * toPrint = g_string_new("");
+    char buf[256];
+    sprintf(buf, "output_filestem : %s\n", complearn_ncd_get_output_filestem(complearn_ncd_top()));
+    g_string_append( toPrint, buf);
+    sprintf(buf, "compressor      : %s\n", complearn_ncd_get_compressor(complearn_ncd_top()));
+    g_string_append( toPrint, buf);
+    sprintf(buf, "chop_names      : %d\n", complearn_ncd_get_chop_names(complearn_ncd_top()));
+    g_string_append( toPrint, buf);
+    sprintf(buf, "write_txt       : %d\n", complearn_ncd_get_write_txt(complearn_ncd_top()));
+    g_string_append( toPrint, buf);
+    sprintf(buf, "clb_output      : %d\n", complearn_ncd_get_clb_output(complearn_ncd_top()));
+    g_string_append( toPrint, buf);
+    sprintf(buf, "plain_output    : %d\n", complearn_ncd_get_plain_output(complearn_ncd_top()));
+    g_string_append( toPrint, buf);
+    sprintf(buf, "nexus_output    : %d\n", complearn_ncd_get_nexus_output(complearn_ncd_top()));
+    g_string_append( toPrint, buf);
+    sprintf(buf, "zero_diagonal   : %d\n", complearn_ncd_get_zero_diagonal(complearn_ncd_top()));
+    g_string_append( toPrint, buf);
+    sprintf(buf, "svd_project     : %d\n", complearn_ncd_get_svd_project(complearn_ncd_top()));
+    g_string_append( toPrint, buf);
+    sprintf(buf, "html_output     : %d\n", complearn_ncd_get_html_output(complearn_ncd_top()));
+    g_string_append( toPrint, buf);
+    sprintf(buf, "show_labels     : %d\n", complearn_ncd_get_show_labels(complearn_ncd_top()));
+    g_string_append( toPrint, buf);
+    sprintf(buf, "just_size       : %d\n", complearn_ncd_get_just_size(complearn_ncd_top()));
+    g_string_append( toPrint, buf);
+    sprintf(buf, "average_matrix  : %d\n", complearn_ncd_get_average_matrix(complearn_ncd_top()));
+    g_string_append( toPrint, buf);
+  return toPrint;
+}
+  private char * output_filestem;
+  property STRING output_filestem
+                      (nick = _("output_filestem"),
+                       blurb = _("prefix of output filename for matrix"),
+                       default_value = _("distmatrix"),
+                       flags = CONSTRUCT,
+                       link,
+                       export);
+  private char * compressor;
+  property STRING compressor
+                      (nick = _("compressor"),
+                       blurb = _("default compressor to use"),
+                       default_value = _("zlib"),
+                       flags = CONSTRUCT,
+                       link,
+                       export);
+  private gboolean chop_names;
+  property BOOLEAN chop_names
+                      (nick = _("chop_names"),
+                       blurb = _("remove common prefixes/suffixes from names"),
+                       default_value = TRUE,
+                       flags = CONSTRUCT,
+                       link,
+                       export);
+  private gboolean write_txt;
+  property BOOLEAN write_txt
+                      (nick = _("write_txt"),
+                       blurb = _("write text format matrix to file"),
+                       default_value = FALSE,
+                       flags = CONSTRUCT,
+                       link,
+                       export);
+  private gboolean clb_output;
+  property BOOLEAN clb_output
+                      (nick = _("clb_output"),
+                       blurb = _("print a clb-format output distance matrix"),
+                       default_value = FALSE,
+                       flags = CONSTRUCT,
+                       link,
+                       export);
+  private gboolean plain_output;
+  property BOOLEAN plain_output
+                      (nick = _("plain_output"),
+                       blurb = _("print a plain format output distance matrix"),
+                       default_value = TRUE,
+                       flags = CONSTRUCT,
+                       link,
+                       export);
+  private gboolean nexus_output;
+  property BOOLEAN nexus_output
+                      (nick = _("nexus_output"),
+                       blurb = _("print a NEXUS format output distance matrix"),
+                       default_value = FALSE,
+                       flags = CONSTRUCT,
+                       link,
+                       export);
+  private gboolean zero_diagonal;
+  property BOOLEAN zero_diagonal
+                      (nick = _("zero_diagonal"),
+                       blurb = _("zero diagonal when arguments are the same"),
+                       default_value = TRUE,
+                       flags = CONSTRUCT,
+                       link,
+                       export);
+  private gboolean svd_project;
+  property BOOLEAN svd_project
+                      (nick = _("svd_project"),
+                       blurb = _("perform SVD projection on the matrix"),
+                       default_value = FALSE,
+                       flags = CONSTRUCT,
+                       link,
+                       export);
+  private gboolean html_output;
+  property BOOLEAN html_output
+                      (nick = _("html_output"),
+                       blurb = _("print HTML table in text output mode"),
+                       default_value = FALSE,
+                       flags = CONSTRUCT,
+                       link,
+                       export);
+  private gboolean show_labels;
+  property BOOLEAN show_labels
+                      (nick = _("show_labels"),
+                       blurb = _("print labels in default text output mode"),
+                       default_value = TRUE,
+                       flags = CONSTRUCT,
+                       link,
+                       export);
+  private gboolean just_size;
+  property BOOLEAN just_size
+                      (nick = _("just_size"),
+                       blurb = _("only calculate compressed size, not NCD"),
+                       default_value = FALSE,
+                       flags = CONSTRUCT,
+                       link,
+                       export);
+  private gboolean average_matrix;
+  property BOOLEAN average_matrix
+                      (nick = _("average_matrix"),
+                       blurb = _("average matrix before outputting result"),
+                       default_value = TRUE,
+                       flags = CONSTRUCT,
+                       link,
+                       export);
+  public void process_options(char **argv) {
+    CompLearnNcd *ncd = complearn_ncd_top();
+    complearn_ncd_set_file_mode();
+    int argc = complearn_count_strings((const char * const *) argv);
+    optind = 1;
+    int option_index = 0, c;
+    struct option long_options[] = {
+      {"binary-output", 0, 0, 'b' },
+      {"compressor", 0, 0, 'c'},
+      {"directory-mode", 0, 0, 'd'},
+      {"file-mode", 0, 0, 'f'},
+      {"help", 0, 0, 'h'},
+      {"list", 0, 0, 'L'},
+      {"literal-mode", 0, 0, 'l'},
+      {"nexus-output", 0, 0, 'n'},
+      {"output", 0, 0, 'o'},
+      {"plainlist-mode", 0, 0, 'p'},
+      {"quiet", 0, 0, 'q'},
+      {"size", 0, 0, 's'},
+      {"server", 0, 0, 'S' },
+      {"termlist-mode", 0, 0, 't'},
+      {"verbose", 0, 0, 'v'},
+      {"version", 0, 0, 'V'},
+      {"write", 0, 0, 'w'},
+      { 0, 0, 0, 0 } };
+    while (1) {
+      c = getopt_long(argc, (char **) argv, "bc:d:f:hLl:no:p:qsSt:vVw", long_options, &option_index);
+      if (c == -1)
+        break;
+      switch (c) {
+        case 'b': complearn_ncd_set_binary_output_mode(); break;
+        case 'c': complearn_ncd_set_compressor(complearn_ncd_top(), optarg);
+                  break;
+        case 'd': complearn_ncd_set_directory_mode();
+        complearn_ncd_add_argument(optarg); break;
+        case '?': exit(1); break;
+        case 'f': complearn_ncd_set_file_mode();
+        complearn_ncd_add_argument(optarg); break;
+        case 'h': complearn_ncd_print_help_and_exit(); break;
+        case 'L': complearn_ncd_print_compressor_list(); break;
+        case 'l': complearn_ncd_set_literal_mode();
+        complearn_ncd_add_argument(optarg); break;
+        case 'n': complearn_ncd_set_nexus_output_mode(); break;
+        case 'o': complearn_ncd_set_output_filestem(complearn_ncd_top(), optarg); complearn_ncd_set_write_mode(); break;
+        case 'p': complearn_ncd_set_filelist_mode();
+        complearn_ncd_add_argument(optarg); break;
+        case 'q': complearn_ncd_set_quiet_mode(); break;
+        case 's': complearn_ncd_set_size_mode(); break;
+        case 'S': complearn_ncd_start_server(); break;
+        case 't': complearn_ncd_set_termlist_mode();
+        complearn_ncd_add_argument(optarg); break;
+        case 'v': complearn_environment_set_verbose_mode(); break;
+        case 'V': complearn_environment_print_version(); exit(0); break;
+        case 'w': complearn_ncd_set_write_mode(); break;
+        default: g_error(_("Unrecognized option '%c'"), c); break;
+      }
+    }
+    if (optind < argc) {
+      int i;
+      for (i = optind; i < argc; i += 1)
+        complearn_ncd_add_argument(argv[i]);
+    }
+    switch (g_slist_length(ncd->_priv->listlist)) {
+      case 0: complearn_ncd_print_help_and_exit(); break;
+     default: complearn_ncd_print_help_and_exit(); break;
+      case 1: complearn_ncd_do_single_list(); break;
+      case 2: complearn_ncd_do_double_list(); break;
+    }
+  }
+  public GSList * get_argument(int whichone) {
+    return g_slist_nth_data(
+    complearn_ncd_top()->_priv->listlist, whichone);
+  }
+  public void clear_arguments(void) {
+    CompLearnNcd *ncd = complearn_ncd_top();
+    ncd->_priv->listlist = 0;
+  }
+  public void add_argument(const char *arg) {
+    CompLearnNcd *ncd = complearn_ncd_top();
+    GSList *result = complearn_ncd_interpret_argument(g_string_new(arg));
+    ncd->_priv->listlist = g_slist_append(ncd->_priv->listlist, result);
+  }
+  public void print_help_and_exit(void) {
+    fprintf(stderr, "%s",
+_(
+"Usage: ncd [options] ...  <arg>\n"
+"\n"
+"Use one argument form to do simple single-object or object-vector     \n"
+"compression or\n"
+"       ncd [options] ...  <arg1> <arg2>\n"
+"  for compression-matrix or NCD matrix calculation\n"
+"OPTIONS:                                                              \n"
+"  -b, --binary-output         enable binary output mode for matrix    \n"
+"  -c, --compressor=COMPNAME   set compressor to use                   \n"
+"  -d, --directory-mode        directory of files                      \n"
+"  -f, --file-mode             a single file                           \n"
+"  -h, --help                  print this help message                 \n"
+"  -l, --literal-mode          a single string literal      (default)  \n"
+"  -L, --list                  list compressors                        \n"
+"  -n, --nexus-output          output NEXUS format distance matrix     \n"
+"  -o, --output=FILESTEM       use FILESTEM instead of distmatrix      \n"
+"  -p, --plainlist-mode        lines with each line a file             \n"
+"  -q, --quiet                 do not print plain text distance matrix \n"
+"  -t, --termlist-mode         lines with each line a literal          \n"
+"  -s, --size                  just compressed sizes in bits no NCD    \n"
+"  -S, --server                stdio server for easy language bindings \n"
+"  -v, --verbose               print extra detailed information        \n"
+"  -V, --version               print complearn library version         \n"
+"\n")
+);
+    exit(0);
+  }
+  public void do_single_list(void) {
+    CompLearnNcd *top = complearn_ncd_top();
+    g_assert(g_slist_length(top->_priv->listlist) == 1);
+    GSList *it, *a = (GSList *) top->_priv->listlist->data;
+    CompLearnCompressorDriver *dr = complearn_ncd_get_compressor_driver();
+    gsl_vector *result = NULL;
+// = gsl_vector_calloc(g_slist_length(a));
+ //   int i = 0;
+    for (it = a; it; it = g_slist_next(it))
+      complearn_compressor_driver_store(dr, ((CLArgumentEntry *) (it->data))->block);
+    result = complearn_compressor_driver_compression_vector(dr);
+    complearn_ncd_vector_prettyprint(result);
+  }
+  public void vector_prettyprint(gsl_vector *result) {
+    int i;
+    for (i = 0; i < result->size; i += 1) {
+      printf("%f\n", gsl_vector_get(result, i));
+    }
+  }
+  public char *make_output_filename(const char *fileext) {
+    return g_strconcat(complearn_ncd_get_output_filestem(complearn_ncd_top()),
+                       ".", fileext, NULL); }
+  public void complearn_fix_labels(LabeledMatrix *lm) {
+    if (lm->labels1)
+      lm->labels1 = complearn_fix_labels(lm->labels1);
+    if (lm->labels2)
+      lm->labels2 = complearn_fix_labels(lm->labels2);
+  }
+  public void do_double_list(void) {
+    CompLearnNcd *top = complearn_ncd_top();
+    g_assert(g_slist_length(top->_priv->listlist) == 2);
+    GSList *a = (GSList *) top->_priv->listlist->data;
+    GSList *b = (GSList *) g_slist_next(top->_priv->listlist)->data;
+    LabeledMatrix *result = complearn_ncd_ncd_matrix(a,b);
+    if (complearn_ncd_get_chop_names(complearn_ncd_top()))
+      complearn_ncd_complearn_fix_labels(result);
+    GString *txtVersion = complearn_matrix_prettyprint_text(result);
+    GString *output_file_block = NULL;
+    if (complearn_ncd_get_clb_output(complearn_ncd_top()))
+      output_file_block = complearn_matrix_prettyprint_clb(result);
+    if (complearn_ncd_get_nexus_output(complearn_ncd_top()))
+      output_file_block = complearn_matrix_prettyprint_nex(result, NULL);
+    fprintf(stdout, "%s", txtVersion->str);
+    if (output_file_block) {
+      complearn_write_file(complearn_ncd_get_complete_output_filename(), output_file_block);
+      g_string_free(output_file_block, TRUE);
+    }
+  }
+  public char *get_complete_output_filename(void) {
+  char *fn = NULL;
+  if (complearn_ncd_get_nexus_output(complearn_ncd_top()))
+    fn = complearn_ncd_make_output_filename("nex");
+  else {
+    if (complearn_ncd_get_clb_output(complearn_ncd_top()))
+      fn = complearn_ncd_make_output_filename("clb");
+    else {
+      int html = complearn_ncd_get_html_output(complearn_ncd_top());
+      fn = complearn_ncd_make_output_filename(html ? "html" : "txt");
+    }
+  }
+  return fn;
+}
+  public void set_nexus_output_mode(void) {
+  complearn_ncd_set_nexus_output(complearn_ncd_top(), TRUE);
+}
+  public void set_binary_output_mode(void) {
+  complearn_ncd_set_clb_output(complearn_ncd_top(), TRUE);
+}
+  public void set_quiet_mode(void) {
+  complearn_ncd_set_plain_output(complearn_ncd_top(), FALSE);
+}
+  public void set_directory_mode(void) {
+    complearn_ncd_top()->_priv->interp = NCD_INTERP_DIRECTORY;
+  }
+  public void set_literal_mode(void) {
+    complearn_ncd_top()->_priv->interp = NCD_INTERP_LITERAL;
+  }
+  public void set_file_mode(void) {
+    complearn_ncd_top()->_priv->interp = NCD_INTERP_FILE;
+  }
+  public void print_compressor_list(void) {
+    char **result = complearn_environment_compressor_list();
+    char **t;
+    printf(_("Available compressors:\n"));
+    for (t = result; *t; t++)
+      printf("  %s\n", *t);
+    exit(0);
+  }
+  public void set_write_mode(void) {
+    complearn_ncd_set_write_txt(complearn_ncd_top(), TRUE);
+  }
+  public void set_size_mode(void) {
+    complearn_ncd_set_just_size(complearn_ncd_top(), TRUE);
+  }
+  public void set_termlist_mode(void) {
+    complearn_ncd_top()->_priv->interp = NCD_INTERP_TERMLIST;
+  }
+  public void set_filelist_mode(void) {
+    complearn_ncd_top()->_priv->interp = NCD_INTERP_FILELIST;
+  }
+  public GSList *interpret_argument(GString *arg) {
+    GSList *result = NULL;
+/*
+    GError *gerr = NULL;
+    GIOChannel *gio = NULL;
+*/
+    switch (complearn_ncd_top()->_priv->interp) {
+      case NCD_INTERP_LITERAL:
+        result = g_slist_append(result, complearn_new_arg(g_string_new_len(arg->str,arg->len),arg->str));
+        return result;
+      case NCD_INTERP_FILE:
+        result = g_slist_append(result, complearn_new_arg(complearn_read_whole_file(arg->str),arg->str));
+        return result;
+      case NCD_INTERP_DIRECTORY:
+        result = complearn_read_directory_of_files(arg->str);
+        return result;
+      case NCD_INTERP_FILELIST:
+        result = complearn_read_list_of_files(arg->str);
+        return result;
+      case NCD_INTERP_TERMLIST:
+        result = complearn_read_list_of_strings(arg->str);
+        return result;
+      default:
+        g_error(_("Unhandled interpretation\n"));
+    }
+    return NULL;
+  }
+  public gdouble mymndf(double cab, double ca, double cb) {
+    double result;
+    double maxc = ca < cb ? cb : ca;
+    double minc = ca < cb ? ca : cb;
+    result = (cab - minc) / maxc;
+    return result;
+  }
+  public CompLearn:Ncd *
+top(void) {
+  if (clncd == NULL)
+    complearn_ncd_new();
+  g_assert(clncd != 0);
+  return clncd;
+  }
+public CompLearn:CompressorDriver *
+get_compressor_driver(void) {
+  CompLearnRealCompressor *rc = complearn_ncd_get_real_compressor();
+  CompLearnCompressorDriver *dri = COMPLEARN_COMPRESSOR_DRIVER(
+                                       complearn_compressor_driver_new());
+   complearn_compressor_driver_set_compressor(dri, rc);
+  return dri;
+}
+
+public LabeledMatrix *
+ncd_matrix( GSList *a, GSList *b) {
+  CompLearnNcd *ncd = COMPLEARN_NCD(complearn_ncd_top());
+  LabeledMatrix *result = calloc(sizeof(*result), 1);
+  int len1 = g_slist_length(a), len2 = g_slist_length(b);
+  result->mat = gsl_matrix_calloc(len1, len2);
+  result->labels1 = calloc(len1 + 1, sizeof(gpointer));
+  result->labels2 = calloc(len2 + 1, sizeof(gpointer));
+  GSList *ita, *itb;
+  CompLearnCompressorDriver *dr = complearn_ncd_get_compressor_driver();
+  gsl_matrix *pairsizes = NULL;
+  gsl_vector *singlesizes = NULL;
+  GArray *dim1 = g_array_new(FALSE, TRUE, sizeof(guint32)), *dim2 = g_array_new(FALSE, TRUE, sizeof(guint32));
+  int i, j, boff=0, k;
+  for (ita = a; ita; ita=g_slist_next(ita)) {
+    complearn_compressor_driver_store(dr, ((CLArgumentEntry *) (ita->data))->block);
+    g_array_append_vals(dim1, &boff, 1);
+    result->labels1[boff] = g_strdup(((CLArgumentEntry *) (ita->data))->label);
+    boff += 1;
+  }
+  k = boff;
+  for (itb = b; itb; itb=g_slist_next(itb)) {
+    complearn_compressor_driver_store(dr, ((CLArgumentEntry *) (itb->data))->block);
+    g_array_append_vals(dim2, &k, 1);
+    result->labels2[k-boff] = g_strdup(((CLArgumentEntry *) (itb->data))->label);
+      k += 1;
+  }
+  i = 0;
+
+  singlesizes = complearn_compressor_driver_compression_vector(dr);
+  pairsizes = complearn_compressor_driver_compression_matrix(dr, dim1, dim2, CL_MATRIX_FULL);
+  for (ita = a; ita; ita=g_slist_next(ita)) {
+    j = 0;
+    for (itb = b; itb; itb=g_slist_next(itb)) {
+      double cboth, c;
+        cboth = gsl_matrix_get(pairsizes, i, j);
+        if (complearn_ncd_get_just_size(complearn_ncd_top())) {
+          c = cboth;
+        } else {
+          if (ncd->_priv->zero_diagonal && complearn_compressor_driver_is_same_block(dr, i, j+boff)) {
+            c = 0.0;
+          }
+          else {
+            double ta, tb;
+            c = complearn_ncd_mymndf(cboth, ta=gsl_vector_get(singlesizes,i),
+                          tb=gsl_vector_get(singlesizes,j+boff));
+//            printf("did c=%f from cboth=%f,ta=%f,tb=%f\n", c, cboth, ta, tb);
+            }
+          }
+        gsl_matrix_set(result->mat, i, j, c);
+//        printf("set %f in %d,%d\n", c, i, j);
+        j += 1;
+    }
+    i += 1;
+  }
+  g_object_unref(dr);
+  gsl_vector_free(singlesizes);
+  gsl_matrix_free(pairsizes);
+  if (complearn_ncd_get_svd_project(complearn_ncd_top())) {
+    gsl_matrix *oldmat = result->mat;
+    result->mat = complearn_svd_project(result->mat);
+    gsl_matrix_free(oldmat);
+  }
+/*
+  if (ncd->_priv->average_matrix && result->mat->size1 == result->mat->size2) {
+    gsl_matrix *oldmat = result->mat;
+    result->mat = complearn_average_matrix(result->mat);
+    gsl_matrix_free(oldmat);
+  }
+*/
+  return result;
+}
+
+public void
+start_server(void) {
+  umain();
+}
+
+public CompLearn:RealCompressor *
+load_compressor(const char *name) {
+  CompLearnNcd *clb = COMPLEARN_NCD(complearn_ncd_top());
+  CompLearnRealCompressor *rc = complearn_environment_load_compressor_named( name );
+  if (rc == NULL)
+    g_error(_("Cannot load compressor %s"),
+                   complearn_ncd_get_compressor(clb));
+  return rc;
+}
+private CompLearn:RealCompressor *
+get_real_compressor(void) {
+  return complearn_ncd_load_compressor(complearn_ncd_get_compressor(complearn_ncd_top()));
+}
+}

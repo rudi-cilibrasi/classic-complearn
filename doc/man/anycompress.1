@@ -1,0 +1,78 @@
+.TH ANYCOMPRESS 1
+.SH NAME
+anycompress \- use any CompLearn module data compressor to compress a file
+.SH SYNOPSIS
+.B anycompress [-L] [ -c
+.I compressor
+.B ] [
+.I infile
+.B ] [
+.B outfile
+.B ]
+.SH DESCRIPTION
+.PP
+anycompress is a simple and powerful generic compression tool.  By default,
+it reads an input file from standard input.  If a command argument is given
+it will use that as input instead.  It produces an output file (or writes to
+stdout if reading from stdin) by adding an extension to the end of the
+input filename.  The user may optionally specify an output filename instead.
+The compressor to use may be specified using the complearn.conf(5)
+configuration file or the -c command line option as described below.
+.TP
+.SH OPTIONS
+.TP
+\fB\-c\fR, \fB\-\-compressor\fR=\fIcompressor\fR
+use and set compressor to use
+.TP
+\fB\-L\fR, \fB\-\-list\fR
+list available builtin compressors as well as available compression modules.
+Modules are loaded from the modules subdirectory of /usr/lib/complearn.
+\fB\-h\fR, \fB\-\-help\fR
+show help options and exit
+.SH EXAMPLES
+.TP
+To gzip a text file to produce a file called readme.txt.gz:
+.TP
+anycompress -c gzip readme.txt
+.TP
+To compute the SHA2 (SHA256) checksum of a file (assuming you have the
+complearn cryptographic compression modules installed):
+anycompress -c sha2 < /bin/ls
+To do the same with MD5:
+anycompress -c md5 < /bin/ls
+.SH FILES
+.TP
+.I $HOME/.complearn/complearn.conf
+.TP
+.I /usr/share/complearn/complearn.conf
+.TP
+.I /usr/local/share/complearn/complearn.conf
+.TP
+ per-user and system configuration files
+see
+.BR complearn (5)
+for further details.
+
+.TP
+.I $HOME/.complearn/modules
+.TP
+.I /usr/lib/complearn/modules
+.TP
+ standard module automatic loading area.  Any shared object compressor
+modules found here will be loaded on startup.
+
+.SH ENVIRONMENT
+.TP
+.I COMPLEARNMODPATH
+.RS
+ If this environment variable is set, CompLearn will search the given directory and load any CompLearn compression modules it finds there (such as the
+libart.so example included with the CompLearn source distribution)
+none
+.SH DIAGNOSTICS
+none
+.SH "SEE ALSO"
+.BR anydecompress (1),
+.BR complearn (5),
+.BR complearn-config (1),
+.BR maketree (1),
+.BR ncd (1)

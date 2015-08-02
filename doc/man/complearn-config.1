@@ -1,0 +1,48 @@
+.TH COMPLEARN 1 "16 December 1998" Version 1.2.10
+.SH NAME
+complearn-config - script to get information about the installed version of CompLearn
+.SH SYNOPSIS
+.B  complearn-config [\-\-prefix\fI[=DIR]\fP] [\-\-exec\-prefix\fI[=DIR]\fP] [\-\-version] [\-\-libs] [\-\-cflags] [\-\-api\-version] [\-\-version] [\-\-help]
+.SH DESCRIPTION
+.PP
+\fIcomplearn-config\fP is a tool that is used to configure to determine
+the compiler and linker flags that should be used to compile
+and link programs that use \fICompLearn\fP. It is also used internally
+to the .m4 macros for GNU autoconf that are included with \fICompLearn\fP.
+.
+.SH OPTIONS
+\fIcomplearn-config\fP accepts the following options:
+.TP 8
+.B  \-\-version
+Print the currently installed version of \fICompLearn\fP on the standard output.
+.TP 8
+.B  \-\-libs
+Print the linker flags that are necessary to link a \fICompLearn\fP program.
+.TP 8
+.B  \-\-cflags
+Print the compiler flags that are necessary to compile a \fICompLearn\fP program.
+.TP 8
+.B  \-\-prefix=PREFIX
+If specified, use PREFIX instead of the installation prefix that \fICompLearn\fP
+was built with when computing the output for the \-\-cflags and
+\-\-libs options. This option is also used for the exec prefix
+if \-\-exec\-prefix was not specified. This option must be specified
+before any \-\-libs or \-\-cflags options.
+.TP 8
+.B  \-\-exec\-prefix=PREFIX
+If specified, use PREFIX instead of the installation exec prefix that
+\fICompLearn\fP was built with when computing the output for the \-\-cflags
+and \-\-libs options.  This option must be specified before any
+\-\-libs or \-\-cflags options.
+.SH SEE ALSO
+.BR maketree (1),
+.BR ncd (1),
+.BR complearn (5)
+.SH COPYRIGHT
+Copyright \(co  2007 Rudi Cilibrasi
+
+Permission to use, copy, modify, and distribute this software and its
+documentation for any purpose and without fee is hereby granted,
+provided that the above copyright notice appear in all copies and that
+both that copyright notice and this permission notice appear in
+supporting documentation.

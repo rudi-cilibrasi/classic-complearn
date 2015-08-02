@@ -1,0 +1,272 @@
+requires 2.0.0
+%headertop{
+#include <glib/garray.h>
+#include <libintl.h>
+#include <stdlib.h>
+#include "real-compressor.h"
+#include "complearn-real-compressor-adaptor.h"
+#include "complearn-external-compressor.h"
+
+#ifndef __COMPLEARNCOMPRESSIONDRIVER__
+#define __COMPLEARNCOMPRESSIONDRIVER__
+
+#define CL_MATRIX_BIGYTRIANGLE    0x01
+#define CL_MATRIX_BIGXTRIANGLE  0x02
+#define CL_MATRIX_DIAGONAL            0x04
+
+#define CL_MATRIX_FULL (CL_MATRIX_BIGYTRIANGLE | CL_MATRIX_BIGXTRIANGLE | CL_MATRIX_DIAGONAL)
+
+#define CL_IS_INDEX_IN(dim1, dim2, mode, x, y) ((dim1 != dim2) || (x == y && (mode & CL_MATRIX_DIAGONAL)) || (x < y && (mode & CL_MATRIX_BIGYTRIANGLE)) || (x > y && (mode & CL_MATRIX_BIGXTRIANGLE)))
+struct _CompLearnCompressorDriverCommand {
+  gboolean is_pair;
+  guint32 first, second;
+};
+
+typedef struct _CompLearnCompressorDriverCommand CompLearnCompressorDriverCommand;
+#endif
+
+%}
+
+%{
+/*
+Copyright (c) 2003-2008 Rudi Cilibrasi, Rulers of the RHouse
+All rights reserved.
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions
+are met:
+1. Redistributions of source code must retain the above copyright
+   notice, this list of conditions and the following disclaimer.
+2. Redistributions in binary form must reproduce the above copyright
+   notice, this list of conditions and the following disclaimer in the
+   documentation and/or other materials provided with the distribution.
+3. Neither the name of the University nor the names of its contributors
+   may be used to endorse or promote products derived from this software
+   without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE RULERS AND CONTRIBUTORS ``AS IS'' AND
+ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ARE DISCLAIMED.  IN NO EVENT SHALL THE RULERS OR CONTRIBUTORS BE LIABLE
+FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+SUCH DAMAGE.
+*/
+#include <stdio.h>
+#if OPENMP_ENABLED
+#include <omp.h>
+#endif
+#define _( O ) gettext( O )
+#include "complearn.h"
+#include "complearn-compressor-driver.h"
+#include "complearn-compressor-driver-private.h"
+%}
+class CompLearn:Compressor:Driver from G:Object
+{
+  private G:Array *blockstore destroy {
+    int i;
+    for (i = 0; i < VAR->len; i += 1)
+      g_string_free(g_array_index(VAR, GString *, i), TRUE);
+    g_array_free(VAR, TRUE);
+  };
+  private CompLearn:RealCompressor *rc unrefwith g_object_unref;
+  public G:Object *
+  new(void) {
+    GObject *ret = (GObject *) GET_NEW;
+    CompLearnCompressorDriver *self = COMPLEARN_COMPRESSOR_DRIVER(ret);
+    self->_priv->blockstore = g_array_new(FALSE, TRUE, sizeof(gpointer));
+    return G_OBJECT (ret);
+  }
+  public guint32 set_compressor(CompLearn:CompressorDriver *cd, CompLearn:RealCompressor *rc) {
+    if (cd->_priv->rc)
+      g_object_unref(cd->_priv->rc);
+    cd->_priv->rc = rc;
+    g_object_ref(rc);
+    return 0;
+  }
+  public guint32 size(CompLearn:CompressorDriver *cd) {
+    return cd->_priv->blockstore->len;
+  }
+  public gboolean is_same_block(CompLearn:CompressorDriver *cd,guint a, guint b)
+  {
+    GString *av, *bv;
+    av = g_array_index(cd->_priv->blockstore, GString *, a);
+    bv = g_array_index(cd->_priv->blockstore, GString *, b);
+    return g_string_equal(av, bv);
+  }
+  public guint32 store(CompLearn:CompressorDriver *cd, GString *str) {
+    int val = complearn_compressor_driver_size(cd);
+    GString *realone = g_string_new_len(str->str, str->len);
+    g_array_append_vals(cd->_priv->blockstore, &realone, 1);
+    return val;
+  }
+  private void check_bounds(CompLearn:CompressorDriver *cd, guint32 a) {
+    CompLearnCompressorDriver *self = COMPLEARN_COMPRESSOR_DRIVER(cd);
+    if (self->_priv->rc == NULL)
+      g_error(_("Must set_compressor before trying to compress."));
+    if (a >= self->_priv->blockstore->len)
+      g_error(_("Compressor index %d out of bounds."), a);
+  }
+  public gdouble compress_single(CompLearn:CompressorDriver *cd, guint32 a) {
+    CompLearnCompressorDriver *self = COMPLEARN_COMPRESSOR_DRIVER(cd);
+    complearn_compressor_driver_check_bounds(self, a);
+    GString *block;
+    gdouble result;
+    block = g_array_index(self->_priv->blockstore, GString *, a);
+    result = real_compressor_compressed_size(self->_priv->rc, block);
+    return result;
+  }
+  public gsl_vector *compression_sequence_ser(CompLearn:CompressorDriver *cd, G:Array *gas)
+{
+    int i = 0;
+    double *fres = NULL;
+    CompLearnCompressorDriverCommand cdc;
+#if OPENMP_ENABLED
+    if (!g_thread_supported ()) g_thread_init (NULL);
+#endif
+    int len = 0;
+    len = gas->len;
+    gsl_vector *result = gsl_vector_calloc(len);
+    fres = calloc(sizeof(fres[0]), len);
+
+    for (i = 0; i < len; i += 1) {
+      cdc = g_array_index(gas, CompLearnCompressorDriverCommand, i);
+      fres[i] = complearn_compressor_driver_execute_instruction(cd, cdc);
+    }
+
+    for (i = 0; i < len; i += 1)
+      gsl_vector_set(result, i, fres[i]);
+
+    free(fres);
+
+    return result;
+  }
+
+  public gsl_vector *compression_sequence_par(CompLearn:CompressorDriver *cd, G:Array *gas)
+    {
+    int i = 0;
+    double *fres = NULL;
+    CompLearnCompressorDriverCommand cdc;
+    int len = 0;
+    len = gas->len;
+    gsl_vector *result = gsl_vector_calloc(len);
+    fres = calloc(sizeof(fres[0]), len);
+    CompLearnRealCompressor *rc = NULL;
+
+#if OPENMP_ENABLED
+    if (!g_thread_supported ()) g_thread_init (NULL);
+#pragma omp parallel shared(len, fres) private(i, rc, cdc) firstprivate(cd)
+ {
+#endif
+    rc = real_compressor_clone(cd->_priv->rc);
+#if OPENMP_ENABLED
+#pragma omp for schedule (dynamic, 1)
+#endif
+    for (i = 0; i < len; i += 1) {
+      cdc = g_array_index(gas, CompLearnCompressorDriverCommand, i);
+      fres[i] = complearn_compressor_driver_execute_instruction(cd, cdc);
+    }
+    g_object_unref(rc);
+#if OPENMP_ENABLED
+  }
+#endif
+
+    for (i = 0; i < len; i += 1)
+      gsl_vector_set(result, i, fres[i]);
+
+    free(fres);
+
+    return result;
+  }
+  public gsl_vector *compression_sequence(CompLearn:CompressorDriver *cd, G:Array *gas) {
+    CompLearnRealCompressor *rc = cd->_priv->rc;
+
+    return real_compressor_is_threadsafe(rc) ? 
+                complearn_compressor_driver_compression_sequence_par(cd, gas) :
+                complearn_compressor_driver_compression_sequence_ser(cd, gas) ;
+  }
+  public CompLearnCompressorDriverCommand command_pair(guint32 a, guint32 b) {
+    CompLearnCompressorDriverCommand cdc;
+    cdc.is_pair = TRUE;
+    cdc.first = a;
+    cdc.second = b;
+    return cdc;
+  }
+  public CompLearnCompressorDriverCommand command_single(guint32 a) {
+    CompLearnCompressorDriverCommand cdc;
+    cdc.is_pair = FALSE;
+    cdc.first = a;
+    cdc.second = 0;
+    return cdc;
+  }
+  public gsl_matrix *compression_matrix(CompLearn:CompressorDriver *cd,
+     G:Array *dim1ind, G:Array *dim2ind, int mode) {
+    guint32 len1 = dim1ind->len;
+    guint32 len2 = dim2ind->len;
+    int i, j;
+    CompLearnCompressorDriverCommand cdc;
+    GArray *seq = g_array_new(FALSE, TRUE, sizeof(cdc));
+    GArray *inv1 = g_array_new(FALSE, TRUE, sizeof(guint32));
+    GArray *inv2 = g_array_new(FALSE, TRUE, sizeof(guint32));
+    gsl_matrix *result = gsl_matrix_calloc(len1, len2);
+    gsl_vector *v;
+    for (i = 0; i < len1; i += 1) {
+      for (j = 0; j < len2; j += 1) {
+        if (CL_IS_INDEX_IN(len1, len2, mode, i, j)) {
+          int x1, x2;
+          x1 = g_array_index(dim1ind, guint32, i);
+          x2 = g_array_index(dim2ind, guint32, j);
+          cdc = complearn_compressor_driver_command_pair(x1,x2);
+          g_array_append_vals(seq, &cdc, 1);
+          g_array_append_vals(inv1, &i, 1);
+          g_array_append_vals(inv2, &j, 1);
+        }
+      }
+    }
+    v = complearn_compressor_driver_compression_sequence(cd,seq);
+    for (i = 0; i < seq->len; i += 1) {
+      gsl_matrix_set(result, g_array_index(inv1, guint32, i),
+                             g_array_index(inv2, guint32, i),
+      gsl_vector_get(v, i));
+    }
+    gsl_vector_free(v);
+    g_array_free(seq, TRUE);
+    g_array_free(inv1, TRUE);
+    g_array_free(inv2, TRUE);
+    return result;
+  }
+  public gsl_vector *compression_vector(CompLearn:CompressorDriver *cd) {
+    int i, len;
+    CompLearnCompressorDriverCommand cdc;
+    GArray *seq = g_array_new(FALSE, TRUE, sizeof(cdc));
+    len = cd->_priv->blockstore->len;
+    for (i = 0; i < len; i += 1) {
+      cdc = complearn_compressor_driver_command_single(i);
+      g_array_append_vals(seq, &cdc, 1);
+    }
+    gsl_vector *result=complearn_compressor_driver_compression_sequence(cd,seq);
+    g_array_free(seq, TRUE);
+    return result;
+  }
+  public gdouble execute_instruction(CompLearn:CompressorDriver *cd, CompLearnCompressorDriverCommand cdc) {
+    return cdc.is_pair ? complearn_compressor_driver_compress_pair(cd,cdc.first,cdc.second) : complearn_compressor_driver_compress_single(cd,cdc.first);
+  }
+  public gdouble compress_pair(CompLearn:CompressorDriver *cd, guint32 a, guint32 b) {
+    CompLearnCompressorDriver *self = COMPLEARN_COMPRESSOR_DRIVER(cd);
+    complearn_compressor_driver_check_bounds(self, a);
+    complearn_compressor_driver_check_bounds(self, b);
+    GString *big = NULL, *b1, *b2;
+    double result = -1.0;
+    b1 = g_array_index(self->_priv->blockstore, GString *, a);
+    b2 = g_array_index(self->_priv->blockstore, GString *, b);
+    big = g_string_new_len(b1->str, b1->len);
+    g_string_append_len(big, b2->str, b2->len);
+    result = real_compressor_compressed_size(self->_priv->rc, big);
+    g_string_free(big, TRUE);
+    return result;
+  }
+}

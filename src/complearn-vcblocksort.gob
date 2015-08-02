@@ -1,0 +1,304 @@
+requires 2.0.0
+%headertop{
+#include <glib/garray.h>
+#include "real-compressor.h"
+#include "complearn-real-compressor-adaptor.h"
+%}
+
+%{
+/*
+Copyright (c) 2003-2008 Rudi Cilibrasi, Rulers of the RHouse
+All rights reserved.
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions
+are met:
+1. Redistributions of source code must retain the above copyright
+   notice, this list of conditions and the following disclaimer.
+2. Redistributions in binary form must reproduce the above copyright
+   notice, this list of conditions and the following disclaimer in the
+   documentation and/or other materials provided with the distribution.
+3. Neither the name of the University nor the names of its contributors
+   may be used to endorse or promote products derived from this software
+   without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE RULERS AND CONTRIBUTORS ``AS IS'' AND
+ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ARE DISCLAIMED.  IN NO EVENT SHALL THE RULERS OR CONTRIBUTORS BE LIABLE
+FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+SUCH DAMAGE.
+*/
+#include <stdio.h>
+#include <stdlib.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
+#include <limits.h>
+#include <string.h>
+#include <assert.h>
+#include <math.h>
+#include <libintl.h>
+
+#define MAXSTATES 13
+#define CREDULITY 52
+#define STATELOGBASE 1.532
+
+#define _(O) gettext(O)
+
+/*! \file ncblocksort.c */
+
+struct BlockSortCompressionInstance {
+  void *baseClass;
+  int code2state[256];
+  int nstates;
+  int *x, *p, allocated;
+};
+
+void complearn_suffix_sort(int *x, int *p, int n, int k, int l);
+static void resetStatistics(struct BlockSortCompressionInstance *bsci);
+
+static void freeBSCI( struct BlockSortCompressionInstance *bsci)
+{
+  if (bsci->allocated > 0) {
+    free(bsci->x);
+    free(bsci->p);
+    bsci->allocated = 0;
+    bsci->x = NULL;
+    bsci->p = NULL;
+  }
+  free(bsci);
+}
+
+static double bs_compress(struct BlockSortCompressionInstance *CI,
+			  unsigned char *data, int size) {
+  int *x, *p;
+  int i, j, mass, av;
+  unsigned char code2byte[256];
+  int num[256], total[MAXSTATES], state, oldstate;
+  int statetrans[MAXSTATES][MAXSTATES], ntrans[MAXSTATES];
+  double cl = 0;
+
+  /* Obtain workspace in x and p */
+  if (CI->allocated < size+1) {
+    CI->allocated = 10 + size * 1.2;
+    CI->x = realloc(CI->x, CI->allocated * sizeof(int));
+    CI->p = realloc(CI->p, CI->allocated * sizeof(int));
+    if (CI->x==NULL || CI->p==NULL) { assert(0 && "blocksort logic error"); }
+  }
+  x = CI->x;
+  p = CI->p;
+
+  /* Suffix sort the data (permutes x and p) */
+  for (i=0; i<size; i++) x[i] = data[i];
+  complearn_suffix_sort(x, p, size, UCHAR_MAX+1, 0);
+
+  /* Initialise state transition statistics */
+  for (j=0; j<MAXSTATES; j++) {
+    total[j]  = 0;
+    ntrans[j] = MAXSTATES;
+    for (i=0; i<MAXSTATES; i++) statetrans[j][i] = 1;
+  }
+  statetrans[0][0]--; ntrans[0]--;
+
+  /* Initialise the move to front codebook and the symbol frequencies */
+  for (i=0; i<256; i++) {
+    code2byte[i] = i;
+    num[i] = 1;
+    total[CI->code2state[i]]++;
+  }
+
+  state = CI->nstates-1;
+
+  /* Code the block sorted sequence */
+  for (i=0; i<size+1; i++) {
+    unsigned char c;
+    unsigned char carry1, carry2;
+    int code;
+
+    c = p[i] ? data[(p[i]+size)%(size+1)] : code2byte[0];
+
+    /* Move to front:
+       - if the symbol is at position 1 of the code book, then move it
+         to position 0
+       - otherwise move it to position 1.
+       (Why? Because it improves compression. Why? No-one knows.)
+    */
+    code = 0;
+    carry2 = code2byte[0];
+    if (carry2!=c) {
+      carry1 = code2byte[++code];
+      if (carry1==c) {
+	code2byte[0] = (unsigned char)c;
+	code2byte[1] = carry2;
+      } else {
+	code2byte[1] = (unsigned char)c;
+	for (;;) {
+	  carry2 = code2byte[++code];
+	  code2byte[code] = carry1;
+	  if (carry2 == c) break;
+	  carry1 = code2byte[++code];
+	  code2byte[code] = carry2;
+	  if (carry1 == c) break;
+	}
+      }
+    }
+
+
+    /* Encoding takes place in three stages:
+
+       1. Encode a state transition.
+          The state depends on the symbol to be encoded through the
+	  lookup table CI->code2state[]. We keep statistics on state
+	  transition frequencies through statetrans[<state>][<state>]
+	  and ntrans[<state>].
+
+       2. Encode the symbol.
+          Decoder already knows it must be one of the symbols that map
+	  to the current state. We keep statistics on those as well,
+	  this time through the arrays num[<symbol>] and total[<state>].
+	  Notice that some states only contain a single symbol; if we are
+	  in such a state then automatically zero bits are used in this
+	  stage.
+
+       3. Run length encode zeroes.
+          If the symbol was a zero, then encode the number of zeroes that
+          follow, instead of coding each of them separately. This is necessary
+	  because often sequences of zeroes occur that are highly dependent:
+	  the probability that the next symbol is also a zero is often much
+	  higher if the previous TWO symbols are zero than if only the
+	  previous symbol is a zero, etc.
+
+    */
+
+    /* Stage 1. Encode the state transition. */
+    oldstate = state;
+    state = CI->code2state[code];
+
+    cl += -log(statetrans[oldstate][state])+log(ntrans[oldstate]);
+    statetrans[oldstate][state]++;
+    ntrans[oldstate]++;
+
+    /* 2. Encode the symbol from the range that belongs to this state */
+    cl += -log(num[code])+log(total[state]);
+
+    mass = CREDULITY;
+    for (j=code; j>=0 && num[j]*(code-j)<mass; j--)
+      mass += num[j];
+    av = mass / (code-j);
+    for (j++; j<=code; j++) {
+      total[CI->code2state[j]] += av - num[j];
+      num[j] = av;
+    }
+
+    /* Stage 3. Run length encode zeroes.
+       We take as a probability distribution on the integers: P(n)=1/(n(n+1))
+       It is easy to check that this sums to one for 1 <= n < infinity.
+       The corresponding code uses -log P(n) bits to encode n.
+       Motivation: the codelength is logarithmic in n, so it can never be
+       extremely inefficient. At the same time, a relatively high probability
+       is assigned to low numbers.
+    */
+    if (code==0 && i<size) {
+      int runlength = i;
+      i++;
+      while (i<size+1) {
+	if (p[i] && data[(p[i]+size)%(size+1)] != code2byte[0]) break;
+	i++;
+      };
+      runlength = i - runlength;
+      i--;
+
+      cl += log(runlength) + log(runlength+1);
+    }
+  }
+
+  return (cl + log(size)) / M_LN2;
+}
+
+static double simple_bs_compress(const GString *inp)
+{
+  double result;
+  struct BlockSortCompressionInstance *bsci;
+  bsci = calloc(sizeof(*bsci), 1);
+  resetStatistics(bsci);
+  result = bs_compress(bsci, (unsigned char *) inp->str, inp->len);
+  freeBSCI(bsci);
+  return result;
+}
+
+static void resetStatistics(struct BlockSortCompressionInstance *bsci)
+{
+  int i, d, m, s;
+  double prev, cur;
+  m = 0;
+  prev = 0;
+  s = 0;
+  for (i=0; i<256; i++) {
+    cur = log(i+1.0)/log(STATELOGBASE);
+    d = (int)cur-(int)prev;
+    if (d>1) m+=(d-1);
+    s = (int)cur - m;
+    bsci->code2state[i] = s;
+    prev = cur;
+  }
+  bsci->nstates = s+1;
+  if (bsci->nstates > MAXSTATES) {
+    assert(0 && "MAXSTATES should be larger.");
+    exit(1);
+  }
+}
+
+%}
+
+class CompLearn:VCBlockSort from CompLearn:Real:Compressor:Adaptor
+ (interface CompLearn:Real:Compressor)
+{
+  public G:Object *
+  new(void) {
+    GObject *ret = (GObject *) GET_NEW;
+    return G_OBJECT (ret);
+  }
+  interface CompLearn:Real:Compressor public GString *
+  compress(CompLearnRealCompressor *rc,const GString *input) {
+    return NULL;
+  }
+  interface CompLearn:Real:Compressor public GString *
+  decompress(CompLearnRealCompressor *rc,const GString *input) {
+    return NULL;
+  }
+  interface CompLearn:Real:Compressor public GString *
+  blurb(CompLearnRealCompressor *rc) {
+    return g_string_new(_("non-coding blocksort with fractional bit return"));
+  }
+  interface CompLearn:Real:Compressor public GString *
+  name(CompLearnRealCompressor *rc) {
+    return g_string_new("blocksort");
+  }
+  interface CompLearn:Real:Compressor public GString *
+  compressor_version(CompLearnRealCompressor *rc) {
+    return g_string_new("0.0.0");
+  }
+  interface CompLearn:Real:Compressor public GString *
+  binding_version(CompLearnRealCompressor *rc) {
+    return g_string_new("0.0.0");
+  }
+  interface CompLearn:Real:Compressor public gdouble
+  compressed_size(CompLearnRealCompressor *rc, const GString *input) {
+    return simple_bs_compress(input);
+  }
+  interface CompLearn:Real:Compressor public gboolean
+  is_just_size(CompLearnRealCompressor *rc) {
+    return TRUE;
+  }
+  interface CompLearn:Real:Compressor public CompLearn:Real:Compressor *
+    clone(CompLearnRealCompressor *rc) {
+    CompLearnVCBlockSort *res = COMPLEARN_VCBLOCKSORT(complearn_vcblocksort_new());
+    return COMPLEARN_REAL_COMPRESSOR(res);
+    }
+}
