@@ -1,5 +1,6 @@
 
 bin_PROGRAMS = ncd anycompress anydecompress complearn-config
+ACLOCAL_AMFLAGS = -I m4
 
 if USING_GOMP
 EXELDFLAGS = -lcomplearn-gomp @PRIVATELIBS@

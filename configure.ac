@@ -1,5 +1,6 @@
 AC_INIT(libcomplearn,1.1.8,cilibrar@cilibrar.com)
 AC_CONFIG_SRCDIR(src/ncd.c)
+AC_CONFIG_MACRO_DIR([m4])
 AC_GNU_SOURCE
 AM_INIT_AUTOMAKE
 AC_CANONICAL_HOST

@@ -25,6 +25,8 @@
 
 SUBDIRS= src tests po
 
+ACLOCAL_AMFLAGS = -I m4
+
 DISTCLEAN_TARGETS = config.log config.status autom4te.cache \
                     complearn-gomp.pc complearn-gomp.pc
 
