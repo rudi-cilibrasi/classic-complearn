@@ -32,6 +32,7 @@ fi
 AC_PATH_PROG(GOB2, gob2, "")
 if test x$GOB2 = x ; then
   HAVEGOB2=0
+  AC_MSG_ERROR(Please install the gob2 package and rerun this script.)
 else
   HAVEGOB2=1
 fi
